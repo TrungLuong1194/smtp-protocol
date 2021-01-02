@@ -9,14 +9,14 @@
 #include "utility.h"
 
 int main(int argc, char *argv[]) {
-	if (argc < 3 || argc > 4) {
-		errorUser("Parameter(s)", "<Server Address> <Echo Word> [<Server Port>]");
+	if (argc != 4) {
+		errorUser("Parameter(s)", "<Server Address> <Echo Word> <Server Port>");
 	}
 
 	char *servIP = argv[1]; // First arg: server IP address
 	char *echoString = argv[2]; // Second arg: string to echo
 
-	in_port_t servPort = (argc == 4) ? atoi(argv[3]) : 7; // Third arg (optional): server port (numeric)
+	in_port_t servPort = atoi(argv[3]); // Third arg: server port (numeric)
 
 	// Create a reliable, stream socket using TCP
 	int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -27,16 +27,15 @@ int main(int argc, char *argv[]) {
 
 	// Construct the server address structure
 	struct sockaddr_in servAddr; // Server address
-	memset(&servAddr, 0, sizeof(servAddr)); // Zero out structure <https://www.man7.org/linux/man-pages/man3/memset.3.html>
+	memset(&servAddr, 0, sizeof(servAddr)); // Zero out structure
 	servAddr.sin_family = AF_INET; // IPv4 address family
 
 	// Convert address: convert IPv4 and IPv6 addresses from text to binary form
-	// https://www.man7.org/linux/man-pages/man3/inet_pton.3.html
-	int rtnVal = inet_pton(AF_INET, servIP, &servAddr.sin_addr.s_addr);
+	int val = inet_pton(AF_INET, servIP, &servAddr.sin_addr.s_addr);
 
-	if (rtnVal == 0) {
+	if (val == 0) {
 		errorUser("inet_pton() failed", "invalid address string");
-	} else if (rtnVal < 0) {
+	} else if (val < 0) {
 		errorSystem("inet_pton() failed");
 	}
 
@@ -60,7 +59,7 @@ int main(int argc, char *argv[]) {
 
 	// Receive the same string back from the server
 	unsigned int totalBytesRcvd = 0; // Count of total bytes received
-	fputs("Received: ", stdout); // Setup to print the echoed string <https://stackoverflow.com/questions/16430108/what-does-it-mean-to-write-to-stdout-in-c>
+	fputs("Received: ", stdout); // Setup to print the echoed string
 
 	while (totalBytesRcvd < echoStringLen) {
 		char buffer[BUFSIZE]; // I/O buffer
