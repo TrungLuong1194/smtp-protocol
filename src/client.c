@@ -6,9 +6,10 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include "utility.h"
+#include "utilLib.h"
 
 int main(int argc, char *argv[]) {
+	
 	if (argc != 4) {
 		errorUser("Parameter(s)", "<Server Address> <Echo Word> <Server Port>");
 	}
