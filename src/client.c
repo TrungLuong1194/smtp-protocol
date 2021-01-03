@@ -4,47 +4,24 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include "utilLib.h"
+#include <netdb.h>
+#include "lib/utilLib.h"
 
 int main(int argc, char *argv[]) {
 	
 	if (argc != 4) {
-		errorUser("Parameter(s)", "<Server Address> <Echo Word> <Server Port>");
+		errorUser("Parameter(s)", "<Server Address/Name> <Echo Word> <Server Port/Service>");
 	}
 
-	char *servIP = argv[1]; // First arg: server IP address
+	char *server = argv[1]; // First arg: server address/name
 	char *echoString = argv[2]; // Second arg: string to echo
+	char *service = argv[3]; // Third arg: server port (numeric)/service
 
-	in_port_t servPort = atoi(argv[3]); // Third arg: server port (numeric)
-
-	// Create a reliable, stream socket using TCP
-	int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	// Create a TCP socket
+	int sock = setupTCPClientSocket(server, service);
 
 	if (sock < 0) {
-		errorSystem("socket() failed");
-	}
-
-	// Construct the server address structure
-	struct sockaddr_in servAddr; // Server address
-	memset(&servAddr, 0, sizeof(servAddr)); // Zero out structure
-	servAddr.sin_family = AF_INET; // IPv4 address family
-
-	// Convert address: convert IPv4 and IPv6 addresses from text to binary form
-	int val = inet_pton(AF_INET, servIP, &servAddr.sin_addr.s_addr);
-
-	if (val == 0) {
-		errorUser("inet_pton() failed", "invalid address string");
-	} else if (val < 0) {
-		errorSystem("inet_pton() failed");
-	}
-
-	servAddr.sin_port = htons(servPort); // Server port
-
-	// Establish the connection to the echo server
-	if (connect(sock, (struct sockaddr *) &servAddr, sizeof(servAddr)) < 0) {
-		errorSystem("connect() failed");
+		errorUser("setupTCPClientSocket() failed", "unable to connect");
 	}
 
 	size_t echoStringLen = strlen(echoString); // Determine input length

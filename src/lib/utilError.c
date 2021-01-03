@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void errorUser(char *msg, char *detail) {
+void errorUser(const char *msg, const char *detail) {
 	fputs(msg, stderr);
 	fputs(": ", stderr);
 	fputs(detail, stderr);
@@ -9,7 +9,7 @@ void errorUser(char *msg, char *detail) {
 	exit(1);
 }
 
-void errorSystem(char *msg) {
+void errorSystem(const char *msg) {
 	perror(msg);
 	exit(1);
 }
