@@ -1,85 +1,136 @@
+#define _POSIX_C_SOURCE 200112L
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/select.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include "utility.h"
+#include <netdb.h>
+#include <unistd.h>
+#include <errno.h>
 
 int main(int argc, char *argv[]) {
-	if (argc != 4) {
-		errorUser("Parameter(s)", "<Server Address> <Echo Word> <Server Port>");
+	
+	if (argc != 3) {
+		fprintf(stderr, "Usage: ./client hostname port\n");
+		return 1;
 	}
 
-	char *servIP = argv[1]; // First arg: server IP address
-	char *echoString = argv[2]; // Second arg: string to echo
+	/* Configure remote */
 
-	in_port_t servPort = atoi(argv[3]); // Third arg: server port (numeric)
+	printf("Configuring remote address...\n");
 
-	// Create a reliable, stream socket using TCP
-	int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	struct addrinfo hints;
 
-	if (sock < 0) {
-		errorSystem("socket() failed");
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_socktype = SOCK_STREAM; // TCP connection
+
+	struct addrinfo *peer_address; // remote address
+
+	if (getaddrinfo(argv[1], argv[2], &hints, &peer_address)) {
+		fprintf(stderr, "getaddrinfo() failed. (%d)\n", errno);
+		return 1;
 	}
 
-	// Construct the server address structure
-	struct sockaddr_in servAddr; // Server address
-	memset(&servAddr, 0, sizeof(servAddr)); // Zero out structure
-	servAddr.sin_family = AF_INET; // IPv4 address family
+	/* Print information of remote */
 
-	// Convert address: convert IPv4 and IPv6 addresses from text to binary form
-	int val = inet_pton(AF_INET, servIP, &servAddr.sin_addr.s_addr);
+	printf("Remote address is: ");
 
-	if (val == 0) {
-		errorUser("inet_pton() failed", "invalid address string");
-	} else if (val < 0) {
-		errorSystem("inet_pton() failed");
+	char address_buffer[100];
+	char service_buffer[100];
+
+	getnameinfo(peer_address->ai_addr, peer_address->ai_addrlen, 
+		address_buffer, sizeof(address_buffer), 
+		service_buffer, sizeof(service_buffer),
+		NI_NUMERICHOST);
+
+	printf("%s %s\n", address_buffer, service_buffer);
+
+	/* Create local socket */
+
+	printf("Creating socket...\n");
+
+	int socket_peer;
+
+	socket_peer = socket(peer_address->ai_family,
+		peer_address->ai_socktype, peer_address->ai_protocol);
+
+	if (socket_peer < 0) {
+		fprintf(stderr, "socket() failed. (%d)\n", errno);
+		return 1;
 	}
 
-	servAddr.sin_port = htons(servPort); // Server port
+	/* Connect socket */
 
-	// Establish the connection to the echo server
-	if (connect(sock, (struct sockaddr *) &servAddr, sizeof(servAddr)) < 0) {
-		errorSystem("connect() failed");
+	printf("Connecting...\n");
+
+	if (connect(socket_peer, peer_address->ai_addr, peer_address->ai_addrlen) < 0) {
+		fprintf(stderr, "connect() failed. (%d)\n", errno);
+		return 1;
 	}
 
-	size_t echoStringLen = strlen(echoString); // Determine input length
+	freeaddrinfo(peer_address);
 
-	// Send the string to the server
-	ssize_t numBytes = send(sock, echoString, echoStringLen, 0);
+	/* Communication */
 
-	if (numBytes < 0) {
-		errorSystem("send() failed");
-	} else if (numBytes != echoStringLen) {
-		errorUser("send()", "sent unexpected number of bytes");
-	}
+	printf("Connected.\n");
+	printf("To send data, enter text followed by enter.\n");
 
-	// Receive the same string back from the server
-	unsigned int totalBytesRcvd = 0; // Count of total bytes received
-	fputs("Received: ", stdout); // Setup to print the echoed string
+	while(1) {
 
-	while (totalBytesRcvd < echoStringLen) {
-		char buffer[BUFSIZE]; // I/O buffer
+		fd_set reads; // store socket set
+		FD_ZERO(&reads); // zero-out socket set
+		FD_SET(socket_peer, &reads); // add to socket set
+		FD_SET(0, &reads); // add stdin to the reads
 
-		numBytes = recv(sock, buffer, BUFSIZE - 1, 0);
+		struct timeval timeout;
 
-		if (numBytes < 0) {
-			errorSystem("recv() failed");
-		} else if (numBytes == 0) {
-			errorUser("recv()", "connection closed prematurely");
+		timeout.tv_sec = 0;
+		timeout.tv_usec = 100000; // 100,000 microseconds
+
+		if (select(socket_peer + 1, &reads, 0, 0, &timeout) < 0) {
+			fprintf(stderr, "select() failed. (%d)\n", errno);
+			return 1;
 		}
 
-		totalBytesRcvd += numBytes;
-		buffer[numBytes] = '\0'; // Terminate the string
-		fputs(buffer, stdout);
+		/* Receive new data */
+
+		if (FD_ISSET(socket_peer, &reads)) { // check if a file descriptor in socket set
+			char read[4096];
+
+			int bytes_received = recv(socket_peer, read, 4096, 0);
+
+			if (bytes_received < 1) {
+				printf("Connection closed by peer.\n");
+				break;
+			}
+
+			printf("\n- Received (%d bytes)\n%s", bytes_received, read);
+		}
+
+		/* Send new data */
+		if (FD_ISSET(0, &reads)) { // check stdin file descriptor: 0
+			char read[4096];
+
+			// fgets() includes the newline character from the input.
+			if (!fgets(read, 4096, stdin)) { // Check ends with a newline
+				break;
+			}
+
+			printf("\n- Sending: %s", read);
+
+			int bytes_sent = send(socket_peer, read, strlen(read), 0);
+
+			printf("Sent %d bytes.\n", bytes_sent);
+		}
 	}
 
-	fputc('\n', stdout);
+	printf("Closing socket...\n");
+    close(socket_peer);
 
-	close(sock);
-
-	return 0;
+    printf("Finished.\n");
+    return 0;
 }
