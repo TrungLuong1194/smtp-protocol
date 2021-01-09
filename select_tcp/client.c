@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
 
 	printf("%s %s\n", address_buffer, service_buffer);
 
-	/* Create local socket */
+	/* socket() creates and initializes a new socket */
 
 	printf("Creating socket...\n");
 
@@ -63,7 +63,7 @@ int main(int argc, char *argv[]) {
 		return 1;
 	}
 
-	/* Connect socket */
+	/* connect() is used on the client to set the remote address and port */
 
 	printf("Connecting...\n");
 
@@ -74,7 +74,7 @@ int main(int argc, char *argv[]) {
 
 	freeaddrinfo(peer_address);
 
-	/* Communication */
+	/* send() and recv() are used to send and receive data with a socket */
 
 	printf("Connected.\n");
 	printf("To send data, enter text followed by enter.\n");
@@ -90,6 +90,9 @@ int main(int argc, char *argv[]) {
 
 		timeout.tv_sec = 0;
 		timeout.tv_usec = 100000; // 100,000 microseconds
+
+		/* - select() is used to wait for an event on one or more sockets.
+		   - select() monitors for terminal/keyboard input. */
 
 		if (select(socket_peer + 1, &reads, 0, 0, &timeout) < 0) {
 			fprintf(stderr, "select() failed. (%d)\n", errno);
@@ -108,10 +111,13 @@ int main(int argc, char *argv[]) {
 				break;
 			}
 
-			printf("\n- Received (%d bytes)\n%s", bytes_received, read);
+			// printf("\n- Received (%d bytes)\n%s\n", bytes_received, read);
+
+			printf("<< %s", read);
 		}
 
 		/* Send new data */
+		
 		if (FD_ISSET(0, &reads)) { // check stdin file descriptor: 0
 			char read[4096];
 
@@ -120,11 +126,13 @@ int main(int argc, char *argv[]) {
 				break;
 			}
 
-			printf("\n- Sending: %s", read);
+			// printf("\n- Sending: %s", read);
+			printf("> %s", read);
 
-			int bytes_sent = send(socket_peer, read, strlen(read), 0);
+			// int bytes_sent = send(socket_peer, read, strlen(read), 0);
+			send(socket_peer, read, strlen(read), 0);
 
-			printf("Sent %d bytes.\n", bytes_sent);
+			// printf("Sent %d bytes.\n", bytes_sent);
 		}
 	}
 
