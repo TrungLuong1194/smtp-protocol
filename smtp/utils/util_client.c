@@ -1,22 +1,8 @@
-#define _POSIX_C_SOURCE 200112L
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <unistd.h>
-#include <errno.h>
-#include <poll.h>
-
 #include "util.h"
 
-/* Open a TCP connection to a given server and port number */
+/* Setup a Network Socket for client */
 
-int setupTCPClient(const char *server, const char *port) {
+int setup_TCP_client(const char *server, const char *port) {
 
 	/* Configure remote */
 
@@ -95,62 +81,9 @@ void get_input(const char *prompt, char *buffer) {
 	}
 }
 
-/* Communication with server using poll() */
-
-void communication_with_server(const int socket_peer) {
-
-	while(1) {
-
-		struct pollfd pollfds[2];
-
-		// file description for stdin
-		pollfds[0].fd = 0;
-		pollfds[0].events = POLLIN | POLLPRI;
-
-		// file description for socket
-		pollfds[1].fd = socket_peer;
-		pollfds[1].events = POLLIN | POLLPRI;
-
-		/* poll() is used to wait for an event on one or more sockets */
-
-		if (poll(pollfds, 2, TIMEOUT) < 0) {
-			fprintf(stderr, "poll() failed. (%d)\n", errno);
-			exit(1);
-		}
-
-		/* Receive new data */
-
-		if (pollfds[1].revents & POLLIN) { // check if a file descriptor in socket set
-			char read[BUFSIZE];
-
-			int bytes_received = recv(socket_peer, read, BUFSIZE, 0);
-
-			if (bytes_received < 1) {
-				printf("Connection closed by peer.\n");
-				break;
-			}
-
-			printf("<< %s", read);
-		}
-
-		/* Send new data */
-
-		if (pollfds[0].revents & POLLIN) { // check stdin file descriptor: 0
-			char read[BUFSIZE];
-
-			// fgets() includes the newline character from the input.
-			if (!fgets(read, BUFSIZE, stdin)) { // Check ends with a newline
-				break;
-			}
-
-			// int bytes_sent = send(socket_peer, read, strlen(read), 0);
-			send(socket_peer, read, strlen(read), 0);
-		}
-	}
-}
-
 /* Close a socket */
-void close_socket(const int socket) {
+
+void close_client_socket(const int socket) {
 
 	printf("Closing socket...\n");
 
