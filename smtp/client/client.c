@@ -33,30 +33,47 @@ int main() {
 		/* Receive new data */
 
 		if (pollfds[1].revents & POLLIN) { // check if a file descriptor in socket set
-			char read[BUFSIZE];
+			char response[BUFSIZE + 1];
+			char *p = response;
+			char *end = response + BUFSIZE;
 
-			int bytes_received = recv(socket_peer, read, BUFSIZE, 0);
+			int bytes_received = recv(socket_peer, p, end - p, 0);
 
 			if (bytes_received < 1) {
-				printf("Connection closed by peer.\n");
+				printf("Connection closed by host.\n");
 				break;
 			}
 
-			printf("S: %s", read);
+			p += bytes_received;
+			*p = 0;
+
+			if (p == end) {
+	            fprintf(stderr, "Server response too large:\n");
+	            fprintf(stderr, "%s", response);
+	            exit(1);
+	        }
+
+			printf("%s", response);
+
+			// Execution of QUIT cmd in server
+			if (strcmp(response, "221 BYE\n") == 0) {
+				printf("Connection closed by foreign host.\n");
+				break;
+			}
 		}
 
 		/* Send new data */
 
 		if (pollfds[0].revents & POLLIN) { // check stdin file descriptor: 0
-			char read[BUFSIZE];
+			char input[MAXINPUT];
 
 			// fgets() includes the newline character from the input.
-			if (!fgets(read, BUFSIZE, stdin)) { // Check ends with a newline
+			if (!fgets(input, BUFSIZE, stdin)) { // Check ends with a newline
 				break;
 			}
 
 			// int bytes_sent = send(socket_peer, read, strlen(read), 0);
-			send(socket_peer, read, strlen(read), 0);
+			send(socket_peer, input, strlen(input), 0);
 		}
 	}
 

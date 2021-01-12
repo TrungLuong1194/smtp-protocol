@@ -6,7 +6,7 @@ int main() {
 
 	/* poll() is used to wait for an event on one or more sockets */
 
-	struct pollfd pollfds[MAX_CLIENTS + 1];
+	struct pollfd pollfds[MAX_CLIENTS];
 
 	pollfds[0].fd = socket_listen;
 	pollfds[0].events = POLLIN | POLLPRI;
@@ -19,11 +19,11 @@ int main() {
 
 	/* Create array for store state of server for each client */
 
-	// int state_server[MAX_CLIENTS];
+	int current_state[MAX_CLIENTS];
 
-	// for (int i = 1; i < MAX_CLIENTS; i++) { // socket client start from 1 too (see in poll())
-	// 	state_server[i] = INIT;
-	// }
+	for (int i = 1; i < MAX_CLIENTS; i++) { // socket client start from 1 too (see in poll())
+		current_state[i] = INIT;
+	}
 
 	/* Communication */
 
@@ -55,7 +55,7 @@ int main() {
 					pollfds[i].fd = socket_client;
 					pollfds[i].events = POLLIN | POLLPRI;
 
-					// state_server[i] = BEGIN;
+					current_state[i] = BEGIN;
 
 					useClient++;
 					break;
@@ -63,7 +63,7 @@ int main() {
 			}
 
 			// Print information of client
-			char address_buffer[100];
+			char address_buffer[ADDRSIZE];
 
 			getnameinfo((struct sockaddr*) &client_address, client_len, 
 				address_buffer, sizeof(address_buffer), 0, 0, NI_NUMERICHOST);
@@ -71,9 +71,8 @@ int main() {
 			printf("New connection from %s\n", address_buffer);
 
 			// Send 220 code to client
-			char msg[BUFSIZE];
+			char msg[] = "220 localhost Simple Mail Transfer Service Ready\n";
 
-			strcpy(msg, "220 Simple Mail Transfer Service Ready\n"); // "\n" = Enter
 			send(socket_client, msg, strlen(msg), 0);
 		}
 
@@ -86,26 +85,93 @@ int main() {
 			}
 
 			if (pollfds[i].revents & POLLIN) {
-				char read[BUFSIZE];
+				char response[BUFSIZE + 1];
+				char *p = response;
+				char *end = response + BUFSIZE;
 
-				/* Receive new data */
-
-				int bytes_received = recv(pollfds[i].fd, read, BUFSIZE, 0);
+				int bytes_received = recv(pollfds[i].fd, p, end - p, 0);
 
 				if (bytes_received < 1) {
 					pollfds[i].fd = -1;
 					pollfds[i].events = -1;
 					pollfds[i].revents = -1;
 
-					// state_server[i] = INIT;
+					current_state[i] = INIT;
 
 					useClient--;
 					close(pollfds[i].fd);
-				} else {
 
-					/* Send new data */
+					continue;
+				}
 
-					send(pollfds[i].fd, read, bytes_received, 0);
+				p += bytes_received;
+				*p = 0;
+
+				if (p == end) {
+		            fprintf(stderr, "Client message too large:\n");
+		            fprintf(stderr, "%s", response);
+		            exit(1);
+		        }
+
+				/* Send data back to client */
+
+				char str[bytes_received];
+
+				for (int j = 0; j < bytes_received; j++) {
+					str[j] = response[j];
+				}
+
+				/* ------------------------ 
+						STATE BEGIN
+				   ------------------------ */
+
+				if (current_state[i] == BEGIN) {
+					if (is_matching_pattern(str, HELO) == 1) {
+						char msg[] = "250 localhost is on the air\n";
+
+						send(pollfds[i].fd, msg, strlen(msg), 0);
+
+						current_state[i] = WAIT;
+					} else if (is_matching_pattern(str, EHLO) == 1) {
+						char msg[] = "250-localhost\n250-8BITMIME\n250-SIZE\n250 OK\n";
+
+						send(pollfds[i].fd, msg, strlen(msg), 0);
+
+						current_state[i] = WAIT;
+					} else if (is_matching_pattern(str, MAIL) == 1) {
+						char msg[] = "503 Error: send HELO/EHLO first\n";
+
+						send(pollfds[i].fd, msg, strlen(msg), 0);
+					} else if (is_matching_pattern(str, RCPT) == 1) {
+						char msg[] = "503 Error: need MAIL command\n";
+
+						send(pollfds[i].fd, msg, strlen(msg), 0);
+					} else if (is_matching_pattern(str, DATA) == 1) {
+						char msg[] = "503 Error: need RCPT command\n";
+
+						send(pollfds[i].fd, msg, strlen(msg), 0);
+					} else if (is_matching_pattern(str, RSET) == 1) {
+						char msg[] = "250 OK\n";
+
+						send(pollfds[i].fd, msg, strlen(msg), 0);
+					} else if (is_matching_pattern(str, QUIT) == 1) {
+						char msg[] = "221 BYE\n";
+
+						send(pollfds[i].fd, msg, strlen(msg), 0);
+
+						pollfds[i].fd = -1;
+						pollfds[i].events = -1;
+						pollfds[i].revents = -1;
+
+						current_state[i] = INIT;
+
+						useClient--;
+						close(pollfds[i].fd);
+					} else {
+						char msg[] = "502 Error: command not recognized\n";
+
+						send(pollfds[i].fd, msg, strlen(msg), 0);
+					}
 				}
 			}
 		}
