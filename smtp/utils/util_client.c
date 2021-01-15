@@ -4,8 +4,7 @@
 
 int setup_TCP_client(const char *server, const char *port) {
 
-	/* Configure remote */
-
+	// Configure remote
 	printf("Configuring remote address...\n");
 
 	struct addrinfo hints;
@@ -20,12 +19,11 @@ int setup_TCP_client(const char *server, const char *port) {
 		exit(1);
 	}
 
-	/* Print information of remote */
-
+	// Print information of remote
 	printf("Remote address is: ");
 
-	char address_buffer[ADDRSIZE];
-	char service_buffer[ADDRSIZE];
+	char address_buffer[SIZE];
+	char service_buffer[SIZE];
 
 	getnameinfo(peer_address->ai_addr, peer_address->ai_addrlen, 
 		address_buffer, sizeof(address_buffer), 
@@ -34,8 +32,7 @@ int setup_TCP_client(const char *server, const char *port) {
 
 	printf("%s %s\n", address_buffer, service_buffer);
 
-	/* socket() creates and initializes a new socket */
-
+	// socket() creates and initializes a new socket
 	printf("Creating socket...\n");
 
 	int socket_peer;
@@ -48,8 +45,7 @@ int setup_TCP_client(const char *server, const char *port) {
 		exit(1);
 	}
 
-	/* connect() is used on the client to set the remote address and port */
-
+	// connect() is used on the client to set the remote address and port
 	printf("Connecting...\n");
 
 	if (connect(socket_peer, peer_address->ai_addr, peer_address->ai_addrlen) < 0) {
@@ -59,25 +55,23 @@ int setup_TCP_client(const char *server, const char *port) {
 
 	freeaddrinfo(peer_address);
 
-	/* send() and recv() are used to send and receive data with a socket */
-
 	printf("Connected.\n");
 
     return socket_peer;
 }
 
-/* Get data from input stdin */
+/* Get data from input stdin ( equivalent command gets() )*/
 
 void get_input(const char *prompt, char *buffer) {
 
 	printf("%s", prompt);
 
-	buffer[0] = 0; // 0 = null in ascii table
 	fgets(buffer, MAXINPUT, stdin);
 
-	const int read = strlen(buffer);
-	if (read > 0) {
-		buffer[read - 1] = 0;
+	int len = strlen(buffer);
+
+	if (len > 0) {
+		buffer[len - 1] = 0; // 0 = null
 	}
 }
 

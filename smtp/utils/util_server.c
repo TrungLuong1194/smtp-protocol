@@ -4,8 +4,7 @@
 
 int setup_TCP_server(const char *port) {
 
-	/* Configure local */
-
+	// Configure local
 	printf("Configuring local address...\n");
 
 	struct addrinfo hints;
@@ -19,8 +18,7 @@ int setup_TCP_server(const char *port) {
 
 	getaddrinfo(0, port, &hints, &bind_address);
 
-	/* socket() creates and initializes a new socket */
-
+	// socket() creates and initializes a new socket
 	printf("Creating socket...\n");
 
 	int socket_listen;
@@ -33,8 +31,7 @@ int setup_TCP_server(const char *port) {
 		exit(1);
 	}
 
-	/* bind() associates a socket with a particular local IP address and port number */
-
+	// bind() associates a socket with a particular local IP address and port number
 	printf("Binding socket to local address...\n");
 
 	if (bind(socket_listen, bind_address->ai_addr, bind_address->ai_addrlen) < 0) {
@@ -44,8 +41,7 @@ int setup_TCP_server(const char *port) {
 
 	freeaddrinfo(bind_address);
 
-	/* listen() is used on the server to cause a TCP socket to listen for new connections */
-
+	// listen() is used on the server to cause a TCP socket to listen for new connections
 	printf("Listening...\n");
 
 	if (listen(socket_listen, MAX_CLIENTS) < 0) {
@@ -87,9 +83,9 @@ int is_matching_pattern(const char *str, const char *pattern) {
 	val_regexec = regexec(&re, str, 0, NULL, 0);
 
 	if (val_regexec == 0) {
-		val_return = 1;
+		val_return = TRUE;
 	} else if (val_regexec == REG_NOMATCH) {
-		val_return = 0;
+		val_return = FALSE;
 	}
 
 	return val_return;

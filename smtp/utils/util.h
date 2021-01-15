@@ -18,34 +18,38 @@
 
 /* Constants */
 
-#define MAXINPUT 1024
-#define BUFSIZE 4096
-#define ADDRSIZE 100
-#define TIMEOUT 100000
-#define TIMEINF -1
-#define MAX_CLIENTS 10
-#define PORT "2525"
+#define MASTER 					0
+#define MAXINPUT 				1024
+#define BUFSIZE 				4096
+#define SIZE 					100
+#define TIME_INF 				-1
+#define AVAILABLE_ENTRY 		-1
+#define MAX_CLIENTS 			10
+#define PORT 					"2525"
+#define TRUE 					1
+#define FALSE 					0
 
 /* Server State */
 
-#define INIT -1
-#define BEGIN 1
-#define WAIT 2
-#define ENVELOPE_CREATED 3
-#define RECIPIENTS_SET 4
-#define WRITING_MAIL 5
-#define READY_TO_DELIVER 6
-#define EXIT 7
+#define INIT_STATE 					0
+#define BEGIN_STATE 				1
+#define WAIT_STATE 					2
+#define ENVELOPE_CREATED_STATE 		3
+#define RECIPIENTS_SET_STATE 		4
+#define WRITING_MAIL_STATE 			5
+#define READY_TO_DELIVER_STATE 		6
+#define QUIT_STATE 					7
 
 /* Regex message from client */
 
-#define HELO "(h|H)(e|E)(l|L)(o|O)\\s+.+"
-#define EHLO "(e|E)(h|H)(l|L)(o|O)\\s+.+"
-#define MAIL "(m|M)(a|A)(i|I)(l|L)\\s+(f|F)(r|R)(o|O)(m|M)\\s*:\\s*<(\\w+)(\\.|_)?(\\w*)@(\\w+)(\\.(\\w+))+>"
-#define RCPT "(r|R)(c|C)(p|P)(t|T)\\s+(t|T)(o|O)\\s*:\\s*<(\\w+)(\\.|_)?(\\w*)@(\\w+)(\\.(\\w+))+>"
-#define DATA "(d|D)(a|A)(t|T)(a|A)"
-#define RSET "(r|R)(s|S)(e|E)(t|T)"
-#define QUIT "(q|Q)(u|U)(i|I)(t|T)"
+#define HELO_CMD "(h|H)(e|E)(l|L)(o|O)\\s+.+"
+#define EHLO_CMD "(e|E)(h|H)(l|L)(o|O)\\s+.+"
+#define MAIL_CMD "(m|M)(a|A)(i|I)(l|L)\\s+(f|F)(r|R)(o|O)(m|M)\\s*:\\s*<(\\w+)(\\.|_)?(\\w*)@(\\w+)(\\.(\\w+))+>"
+#define RCPT_CMD "(r|R)(c|C)(p|P)(t|T)\\s+(t|T)(o|O)\\s*:\\s*<(\\w+)(\\.|_)?(\\w*)@(\\w+)(\\.(\\w+))+>"
+#define DATA_CMD "(d|D)(a|A)(t|T)(a|A)"
+#define RSET_CMD "(r|R)(s|S)(e|E)(t|T)"
+#define VRFY_CMD "(v|V)(r|R)(f|F)(y|Y)\\s+.+"
+#define QUIT_CMD "(q|Q)(u|U)(i|I)(t|T)"
 
 /* Client */
 
