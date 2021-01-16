@@ -16,12 +16,14 @@
 #include <poll.h>
 #include <regex.h>
 #include <time.h>
+#include <stdarg.h>
 
 /* Constants */
 
 #define MASTER 					0
 #define MAXINPUT 				1024
 #define BUFSIZE 				4096
+#define LOGSIZE					100
 #define SIZE 					100
 #define TIME_INF 				-1
 #define INIT_VALUE 				-1
@@ -67,6 +69,6 @@ int is_matching_pattern(const char *str, const char *pattern);
 
 /* For both client and server */
 
-void logs(const char *filename, const char *msg, const char *level);
+void logs(const char *filename, const char *level, const char *text, ...);
 
 #endif
