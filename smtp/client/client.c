@@ -5,7 +5,6 @@ int main() {
 	char server[MAXINPUT];
 
 	get_input("Mail server: ", server);
-
 	printf("Connecting to server: %s:%s\n", server, PORT);
 
 	int socket_peer = setup_TCP_client(server, PORT);
@@ -39,14 +38,12 @@ int main() {
 			char response[BUFSIZE + 1];
 
 			int bytes_received = recv(socket_peer, response, BUFSIZE, 0);
-
 			if (bytes_received < 1) {
 				printf("Connection closed by host.\n");
 				break;
 			}
 
 			response[bytes_received] = '\0'; // terminate the string
-
 			fputs(response, stdout);
 		}
 
@@ -56,7 +53,6 @@ int main() {
 			char input[BUFSIZE];
 
 			fgets(input, BUFSIZE, stdin);
-
 			send(socket_peer, input, strlen(input), 0);
 		}
 	}

@@ -29,7 +29,6 @@ int setup_TCP_client(const char *server, const char *port) {
 		address_buffer, sizeof(address_buffer), 
 		service_buffer, sizeof(service_buffer),
 		NI_NUMERICHOST);
-
 	printf("%s %s\n", address_buffer, service_buffer);
 
 	// socket() creates and initializes a new socket
@@ -39,7 +38,6 @@ int setup_TCP_client(const char *server, const char *port) {
 
 	socket_peer = socket(peer_address->ai_family,
 		peer_address->ai_socktype, peer_address->ai_protocol);
-
 	if (socket_peer < 0) {
 		fprintf(stderr, "socket() failed. (%d)\n", errno);
 		exit(1);
@@ -54,7 +52,6 @@ int setup_TCP_client(const char *server, const char *port) {
 	}
 
 	freeaddrinfo(peer_address);
-
 	printf("Connected.\n");
 
     return socket_peer;
@@ -65,11 +62,9 @@ int setup_TCP_client(const char *server, const char *port) {
 void get_input(const char *prompt, char *buffer) {
 
 	printf("%s", prompt);
-
 	fgets(buffer, MAXINPUT, stdin);
 
 	int len = strlen(buffer);
-
 	if (len > 0) {
 		buffer[len - 1] = 0; // 0 = null
 	}
@@ -80,8 +75,6 @@ void get_input(const char *prompt, char *buffer) {
 void close_client_socket(const int socket) {
 
 	printf("Closing socket...\n");
-
 	close(socket);
-
 	printf("Finished.\n");
 }

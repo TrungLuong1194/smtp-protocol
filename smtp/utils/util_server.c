@@ -25,7 +25,6 @@ int setup_TCP_server(const char *port) {
 
 	socket_listen = socket(bind_address->ai_family,
 		bind_address->ai_socktype, bind_address->ai_protocol);
-
 	if (socket_listen < 0) {
 		fprintf(stderr, "socket() failed. (%d)\n", errno);
 		exit(1);
@@ -57,9 +56,7 @@ int setup_TCP_server(const char *port) {
 void close_server_socket(const int socket) {
 
 	printf("Closing listening socket...\n");
-
 	close(socket);
-
 	printf("Finished.\n");
 }
 
@@ -68,12 +65,10 @@ void close_server_socket(const int socket) {
 int is_matching_pattern(const char *str, const char *pattern) {
 
 	regex_t re;
-
 	int val_regcomp, val_regexec, val_return;
 
 	// Creation of regex
 	val_regcomp = regcomp(&re, pattern, REG_EXTENDED);
-
 	if (val_regcomp != 0) {
 		fprintf(stderr, "regcomp() failed. (%s)\n", pattern);
 		exit(1);
@@ -81,7 +76,6 @@ int is_matching_pattern(const char *str, const char *pattern) {
 
 	// Comparing pattern
 	val_regexec = regexec(&re, str, 0, NULL, 0);
-
 	if (val_regexec == 0) {
 		val_return = TRUE;
 	} else if (val_regexec == REG_NOMATCH) {
