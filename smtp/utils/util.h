@@ -1,21 +1,66 @@
 #ifndef UTIL_H
 #define UTIL_H
 
-enum constants {
-	MAXINPUT = 512,
-	MAXRESPONSE = 1024,
-	BUFSIZE = 1024,
-	ADDRSIZE = 100,
-};
+#define _POSIX_C_SOURCE 200112L
 
-/* ---- Client ---- */
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <unistd.h>
+#include <errno.h>
+#include <poll.h>
+#include <regex.h>
 
+/* Constants */
+
+#define MASTER 					0
+#define MAXINPUT 				1024
+#define BUFSIZE 				4096
+#define SIZE 					100
+#define TIME_INF 				-1
+#define AVAILABLE_ENTRY 		-1
+#define MAX_CLIENTS 			10
+#define PORT 					"2525"
+#define TRUE 					1
+#define FALSE 					0
+
+/* Server State */
+
+#define INIT_STATE 					0
+#define BEGIN_STATE 				1
+#define WAIT_STATE 					2
+#define ENVELOPE_CREATED_STATE 		3
+#define RECIPIENTS_SET_STATE 		4
+#define WRITING_MAIL_STATE 			5
+#define READY_TO_DELIVER_STATE 		6
+#define QUIT_STATE 					7
+
+/* Regex message from client */
+
+#define HELO_CMD "(h|H)(e|E)(l|L)(o|O)\\s+.+"
+#define EHLO_CMD "(e|E)(h|H)(l|L)(o|O)\\s+.+"
+#define MAIL_CMD "(m|M)(a|A)(i|I)(l|L)\\s+(f|F)(r|R)(o|O)(m|M)\\s*:\\s*<(\\w+)(\\.|_)?(\\w*)@(\\w+)(\\.(\\w+))+>"
+#define RCPT_CMD "(r|R)(c|C)(p|P)(t|T)\\s+(t|T)(o|O)\\s*:\\s*<(\\w+)(\\.|_)?(\\w*)@(\\w+)(\\.(\\w+))+>"
+#define DATA_CMD "(d|D)(a|A)(t|T)(a|A)"
+#define RSET_CMD "(r|R)(s|S)(e|E)(t|T)"
+#define VRFY_CMD "(v|V)(r|R)(f|F)(y|Y)\\s+.+"
+#define QUIT_CMD "(q|Q)(u|U)(i|I)(t|T)"
+
+/* Client */
+
+int setup_TCP_client(const char *server, const char *port);
 void get_input(const char *prompt, char *buffer);
-void send_format(int server, const char *text, ...);
-int parse_response(const char *response);
-void wait_on_response(int server, int expecting);
-int connect_to_server(const char *server, const char *port);
+void close_client_socket(const int socket);
 
-/* ---- Server ---- */
+/* Server */
+
+int setup_TCP_server(const char *port);
+void close_server_socket(const int socket);
+int is_matching_pattern(const char *str, const char *pattern);
 
 #endif

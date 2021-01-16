@@ -1,103 +1,67 @@
-#include <stdio.h>
-#include <time.h>
-#include <string.h>
-#include <unistd.h>
 #include "../utils/util.h"
 
 int main() {
 
-	char hostname[MAXINPUT];
-	get_input("Mail server: ", hostname);
+	char server[MAXINPUT];
 
-	printf("Connecting to server: %s:25\n", hostname);
+	get_input("Mail server: ", server);
 
-	int server = connect_to_server(hostname, "25");
-	wait_on_response(server, 220);
+	printf("Connecting to server: %s:%s\n", server, PORT);
 
-	/* HELO */
+	int socket_peer = setup_TCP_client(server, PORT);
 
-	send_format(server, "HELO trungluong1194\r\n"); // "\r\n" = End Of Line
-	wait_on_response(server, 250);
+	printf("\n-- Begin dialog -- \n\n");
+	
+    while(TRUE) {
 
-	char sender[MAXINPUT];
-	get_input("From: ", sender);
+		struct pollfd pollfds[2];
+		int nfds = 0;
 
-	/* MAIL FROM */
+		// File description for stdin
+		pollfds[0].fd = 0;
+		pollfds[0].events = POLLIN | POLLPRI;
+		nfds++;
 
-	send_format(server, "MAIL FROM:<%s>\r\n", sender);
-    wait_on_response(server, 250);
+		// File description for socket
+		pollfds[1].fd = socket_peer;
+		pollfds[1].events = POLLIN | POLLPRI;
+		nfds++;
 
-    char recipient[MAXINPUT];
-    get_input("To: ", recipient);
+		// poll() is used to wait for an event on one or more sockets
+		if (poll(pollfds, nfds, TIME_INF) < 0) {
+			fprintf(stderr, "poll() failed. (%d)\n", errno);
+			exit(1);
+		}
 
-    /* RCPT TO */
+		// Wait events from socket
+		if (pollfds[1].revents & POLLIN) {
 
-    send_format(server, "RCPT TO:<%s>\r\n", recipient);
-    wait_on_response(server, 250);
+			char response[BUFSIZE + 1];
 
-    /* DATA */
+			int bytes_received = recv(socket_peer, response, BUFSIZE, 0);
 
-    send_format(server, "DATA\r\n");
-    wait_on_response(server, 354);
+			if (bytes_received < 1) {
+				printf("Connection closed by host.\n");
+				break;
+			}
 
-    /* 
-    - Email Format:
+			response[bytes_received] = '\0'; // terminate the string
 
-    	From: Alice Doe <alice@example.net>
-		To: Bob Doe <bob@example.com>
-		Subject: Re: The Cake
-		Date: Fri, 03 May 2019 02:31:20 +0000
+			fputs(response, stdout);
+		}
 
-		Do NOT forget to bring the cake!
-		.
-    */
+		// Wait events from stdin
+		if (pollfds[0].revents & POLLIN) {
+			
+			char input[BUFSIZE];
 
-    char subject[MAXINPUT];
-    get_input("Subject: ", subject);
+			fgets(input, BUFSIZE, stdin);
 
-    // Header
-    send_format(server, "From:<%s>\r\n", sender);
-    send_format(server, "To:<%s>\r\n", recipient);
-    send_format(server, "Subject:%s\r\n", subject);
+			send(socket_peer, input, strlen(input), 0);
+		}
+	}
 
-    // Datetime
-    time_t timer;
-    time(&timer);
+    close_client_socket(socket_peer);
 
-    struct tm *timeinfo;
-    timeinfo = gmtime(&timer);
-
-    char date[128];
-    strftime(date, 128, "%a, %d %b %Y %H:%M:%S +0000", timeinfo);
-
-    send_format(server, "Date:%s\r\n", date);
-    send_format(server, "\r\n");
-
-    printf("Enter your email text, end with \".\" on a line by itself.\n");
-
-    // Body
-    while (1) {
-
-        char body[MAXINPUT];
-
-        get_input("> ", body);
-        send_format(server, "%s\r\n", body);
-
-        if (strcmp(body, ".") == 0) {
-            break;
-        }
-    }
-
-    wait_on_response(server, 250);
-
-    /* QUIT */
-
-    send_format(server, "QUIT\r\n");
-    wait_on_response(server, 221);
-
-    printf("\nClosing socket...\n");
-    close(server);
-
-    printf("Finished.\n");
     return 0;
 }
