@@ -72,7 +72,7 @@ int main() {
 			logs("../../logs/server.log", INFO, "New connection from %s", address_buffer);
 
 			// Send 220 code
-			msg = "220 localhost Simple Mail Transfer Service Ready\n";
+			msg = "220 server.server Simple Mail Transfer Service Ready\n";
 			send(socket_client, msg, strlen(msg), 0);
 		}
 
@@ -101,39 +101,36 @@ int main() {
 
 				response[bytes_received] = '\0'; // terminate the string
 
-				// Send data back to client
-				char str[bytes_received];
-
-				for (int j = 0; j < bytes_received; j++) {
-					str[j] = response[j];
-				}
-
-				/* ---------- STATE BEGIN ---------- */
+				/* ---------- BEGIN STATE ---------- */
 
 				if (current_state[i] == BEGIN_STATE) {
-					if (is_matching_pattern(str, HELO_CMD) == TRUE) {
-						msg = "250 localhost is on the air\n";
+
+					if (is_matching_pattern(response, HELO_CMD) == TRUE) {
+						msg = "250 server.server greets client.client\n";
 						send(pollfds[i].fd, msg, strlen(msg), 0);
 
 						current_state[i] = WAIT_STATE;
-					} else if (is_matching_pattern(str, EHLO_CMD) == TRUE) {
-						msg = "250-localhost\n250-8BITMIME\n250 OK\n";
+					} else if (is_matching_pattern(response, EHLO_CMD) == TRUE) {
+						msg = "250-server.server greets client.client\n250-VRFY\n250 OK\n";
 						send(pollfds[i].fd, msg, strlen(msg), 0);
 
 						current_state[i] = WAIT_STATE;
-					} else if (is_matching_pattern(str, MAIL_CMD) == TRUE) {
-						msg = "503 Error: send HELO/EHLO first\n";
+					} else if (is_matching_pattern(response, VRFY_CMD) == TRUE) {
+						msg = "503 Error: need HELO/EHLO command\n";
 						send(pollfds[i].fd, msg, strlen(msg), 0);
-					} else if (is_matching_pattern(str, RCPT_CMD) == TRUE) {
+					} else if (is_matching_pattern(response, MAIL_CMD) == TRUE) {
+						msg = "503 Error: need HELO/EHLO command\n";
+						send(pollfds[i].fd, msg, strlen(msg), 0);
+					} else if (is_matching_pattern(response, RCPT_CMD) == TRUE) {
 						msg = "503 Error: need MAIL command\n";
 						send(pollfds[i].fd, msg, strlen(msg), 0);
-					} else if (is_matching_pattern(str, DATA_CMD) == TRUE) {
+					} else if (is_matching_pattern(response, DATA_CMD) == TRUE) {
 						msg = "503 Error: need RCPT command\n";
 						send(pollfds[i].fd, msg, strlen(msg), 0);
-					} else if (is_matching_pattern(str, RSET_CMD) == TRUE) {
+					} else if (is_matching_pattern(response, RSET_CMD) == TRUE) {
 						msg = "250 OK\n";
 						send(pollfds[i].fd, msg, strlen(msg), 0);
-					} else if (is_matching_pattern(str, QUIT_CMD) == TRUE) {
+					} else if (is_matching_pattern(response, QUIT_CMD) == TRUE) {
 						msg = "221 BYE\n";
 						send(pollfds[i].fd, msg, strlen(msg), 0);
 
@@ -149,6 +146,61 @@ int main() {
 						send(pollfds[i].fd, msg, strlen(msg), 0);
 					}
 				}
+
+				/* ---------- WAIT STATE ---------- */
+
+				else if (current_state[i] == WAIT_STATE) {
+
+					if (is_matching_pattern(response, HELO_CMD) == TRUE) {
+						msg = "250 server.server greets client.client\n";
+						send(pollfds[i].fd, msg, strlen(msg), 0);
+					} else if (is_matching_pattern(response, EHLO_CMD) == TRUE) {
+						msg = "250-server.server greets client.client\n250-VRFY\n250 OK\n";
+						send(pollfds[i].fd, msg, strlen(msg), 0);
+					} else if (is_matching_pattern(response, VRFY_CMD) == TRUE) {
+						char *hostname = get_hostname(response);
+						char *res = get_address_user(hostname);
+
+						if (strcmp(res, "No such user here") == 0) {
+							char buf[BUFSIZE];
+
+							snprintf(buf, sizeof buf, "%s%s%s", "550 ", res, "\n");
+							send(pollfds[i].fd, buf, strlen(buf), 0);
+						} else {
+							char buf[BUFSIZE];
+
+							snprintf(buf, sizeof buf, "%s%s%s", "250 ", res, "\n");
+							send(pollfds[i].fd, buf, strlen(buf), 0);
+						}
+					} else if (is_matching_pattern(response, MAIL_CMD) == TRUE) {
+						msg = "503 Error: need VRFY command\n";
+						send(pollfds[i].fd, msg, strlen(msg), 0);
+					} else if (is_matching_pattern(response, RCPT_CMD) == TRUE) {
+						msg = "503 Error: need MAIL command\n";
+						send(pollfds[i].fd, msg, strlen(msg), 0);
+					} else if (is_matching_pattern(response, DATA_CMD) == TRUE) {
+						msg = "503 Error: need RCPT command\n";
+						send(pollfds[i].fd, msg, strlen(msg), 0);
+					} else if (is_matching_pattern(response, RSET_CMD) == TRUE) {
+						msg = "250 OK\n";
+						send(pollfds[i].fd, msg, strlen(msg), 0);
+					} else if (is_matching_pattern(response, QUIT_CMD) == TRUE) {
+						msg = "221 BYE\n";
+						send(pollfds[i].fd, msg, strlen(msg), 0);
+
+						pollfds[i].fd = INIT_VALUE;
+						pollfds[i].events = INIT_VALUE;
+						pollfds[i].revents = INIT_VALUE;
+						nfds--;
+
+						current_state[i] = INIT_STATE;
+						close(pollfds[i].fd);
+					} else {
+						msg = "502 Error: command not recognized\n";
+						send(pollfds[i].fd, msg, strlen(msg), 0);
+					}
+				}
+
 			}
 		}
 	}

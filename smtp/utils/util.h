@@ -33,6 +33,7 @@
 #define FALSE 					0
 #define INFO					"INFO"
 #define ERROR					"ERROR"
+#define NUM_RECORD				10
 
 /* Server State */
 
@@ -53,6 +54,7 @@
 #define RCPT_CMD "(r|R)(c|C)(p|P)(t|T)\\s+(t|T)(o|O)\\s*:\\s*<(\\w+)(\\.|_)?(\\w*)@(\\w+)(\\.(\\w+))+>"
 #define DATA_CMD "(d|D)(a|A)(t|T)(a|A)"
 #define RSET_CMD "(r|R)(s|S)(e|E)(t|T)"
+#define VRFY_CMD "(v|V)(r|R)(f|F)(y|Y)\\s+.+"
 #define QUIT_CMD "(q|Q)(u|U)(i|I)(t|T)"
 
 /* Client */
@@ -65,10 +67,12 @@ void close_client_socket(const int socket);
 
 int setup_TCP_server(const char *port);
 void close_server_socket(const int socket);
-int is_matching_pattern(const char *str, const char *pattern);
 
 /* For both client and server */
 
+int is_matching_pattern(const char *str, const char *pattern);
 void logs(const char *filename, const char *level, const char *text, ...);
+char *get_address_user(const char *name);
+char *get_hostname(char* input);
 
 #endif

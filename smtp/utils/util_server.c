@@ -67,28 +67,3 @@ void close_server_socket(const int socket) {
 	printf("Finished.\n");
 	logs("../../logs/server.log", INFO, "Finished.");
 }
-
-/* Check matching of pattern in a string using regex */
-
-int is_matching_pattern(const char *str, const char *pattern) {
-
-	regex_t re;
-	int val_regcomp, val_regexec, val_return;
-
-	// Creation of regex
-	val_regcomp = regcomp(&re, pattern, REG_EXTENDED);
-	if (val_regcomp != 0) {
-		fprintf(stderr, "regcomp() failed. (%s)\n", pattern);
-		exit(1);
-	}
-
-	// Comparing pattern
-	val_regexec = regexec(&re, str, 0, NULL, 0);
-	if (val_regexec == 0) {
-		val_return = TRUE;
-	} else if (val_regexec == REG_NOMATCH) {
-		val_return = FALSE;
-	}
-
-	return val_return;
-}
