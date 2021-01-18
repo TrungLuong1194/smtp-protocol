@@ -49,6 +49,10 @@ int main() {
 
 			response[bytes_received] = '\0'; // terminate the string
 			fputs(response, stdout);
+
+			if (strcmp(response, SIGQUIT) == 0) { // Check server send signal to quit
+				break;
+			}
 		}
 
 		// Wait events from stdin

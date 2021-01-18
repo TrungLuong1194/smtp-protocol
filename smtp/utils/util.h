@@ -34,6 +34,7 @@
 #define INFO					"INFO"
 #define ERROR					"ERROR"
 #define NUM_RECORD				10
+#define SIGQUIT					"221 BYE\n"
 
 /* Server State */
 
@@ -44,7 +45,6 @@
 #define RECIPIENTS_SET_STATE 		4
 #define WRITING_MAIL_STATE 			5
 #define READY_TO_DELIVER_STATE 		6
-#define QUIT_STATE 					7
 
 /* Regex message from client */
 
