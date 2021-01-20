@@ -59,49 +59,57 @@ void logs(const char *filename, const char *level, const char *text, ...) {
 	fclose(f);
 }
 
-/* Mailbox record */
+/* Get address mail from hostname */
 
-struct mailbox {
-	int id;
-	char *hostname;
-	char *address;
-};
+char *get_address_mail_from_hostname(const char *name) {
 
-char *get_address_user(const char *name) {
-
-	// Add new data to mailbox
+	// Initialize data for mailbox
 	struct mailbox user[NUM_RECORD];
-	int count = 0;
 
 	user[0].id = 0;
 	user[0].hostname = "superuser";
 	user[0].address = "superuser@server.server";
-	count++;
 
 	user[1].id = 1;
 	user[1].hostname = "user1";
 	user[1].address = "user1@server.server";
-	count++;
 
 	user[2].id = 2;
 	user[2].hostname = "user2";
 	user[2].address = "user2@server.server";
-	count++;
 
 	user[3].id = 3;
 	user[3].hostname = "user3";
 	user[3].address = "user3@server.server";
-	count++;
 
 	user[4].id = 4;
 	user[4].hostname = "user4";
 	user[4].address = "user4@server.server";
-	count++;
+
+	user[5].id = 5;
+	user[5].hostname = "user5";
+	user[5].address = "user5@server.server";
+
+	user[6].id = 6;
+	user[6].hostname = "user6";
+	user[6].address = "user6@server.server";
+
+	user[7].id = 7;
+	user[7].hostname = "user7";
+	user[7].address = "user7@server.server";
+
+	user[8].id = 8;
+	user[8].hostname = "user8";
+	user[8].address = "user8@server.server";
+
+	user[9].id = 9;
+	user[9].hostname = "user9";
+	user[9].address = "user9@server.server";
 
 	// Check mailbox record
 	char *addr;
 
-	for (int i = 0; i < count; i++) {
+	for (int i = 0; i < NUM_RECORD; i++) {
 		if (strcmp(name, user[i].hostname) == 0) {
 			addr = user[i].address;
 
@@ -116,7 +124,7 @@ char *get_address_user(const char *name) {
 
 /* Get hostname from VRFY command */
 
-char *get_hostname(char* input) {
+char *get_hostname_from_vrfy(char* input) {
 
 	// New string except first 4 letter 'vrfy' and last '\n'
 	char tmp[strlen(input) - 5];
@@ -140,4 +148,88 @@ char *get_hostname(char* input) {
 	}
 
 	return output;
+}
+
+/* Get address mail from RCPT command */
+
+void get_address_from_rcpt(char *input, char *output) {
+	
+	int start, end;
+	
+	for (int i = 0; i < strlen(input); i++) {
+		if (input[i] == '<') {
+			start = i;
+		} else if (input[i] == '>') {
+			end = i;
+		}
+	}
+
+	int index = 0;
+	
+	for (int i = start + 1; i < end; i++) {
+		output[index] = input[i];
+		index++;
+	}
+	
+	output[index] = '\0';
+}
+
+/* Check address mail in mailbox? */
+
+int check_address_in_mailbox(char *mail) {
+
+	// Initialize data for mailbox
+	struct mailbox user[NUM_RECORD];
+
+	user[0].id = 0;
+	user[0].hostname = "superuser";
+	user[0].address = "superuser@server.server";
+
+	user[1].id = 1;
+	user[1].hostname = "user1";
+	user[1].address = "user1@server.server";
+
+	user[2].id = 2;
+	user[2].hostname = "user2";
+	user[2].address = "user2@server.server";
+
+	user[3].id = 3;
+	user[3].hostname = "user3";
+	user[3].address = "user3@server.server";
+
+	user[4].id = 4;
+	user[4].hostname = "user4";
+	user[4].address = "user4@server.server";
+
+	user[5].id = 5;
+	user[5].hostname = "user5";
+	user[5].address = "user5@server.server";
+
+	user[6].id = 6;
+	user[6].hostname = "user6";
+	user[6].address = "user6@server.server";
+
+	user[7].id = 7;
+	user[7].hostname = "user7";
+	user[7].address = "user7@server.server";
+
+	user[8].id = 8;
+	user[8].hostname = "user8";
+	user[8].address = "user8@server.server";
+
+	user[9].id = 9;
+	user[9].hostname = "user9";
+	user[9].address = "user9@server.server";
+
+	int result = FALSE;
+
+	for (int i = 0; i < NUM_RECORD; i++) {
+		if (strcmp(mail, user[i].address) == 0) {
+			result = TRUE;
+
+			break;
+		}
+	}
+
+	return result;
 }

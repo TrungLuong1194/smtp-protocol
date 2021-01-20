@@ -77,6 +77,14 @@ typedef enum {
 
 } eSystemEvent;
 
+/* Mailbox record */
+
+struct mailbox {
+	int id;
+	char *hostname;
+	char *address;
+};
+
 /* Client */
 
 int setup_TCP_client(const char *server, const char *port);
@@ -92,8 +100,10 @@ void close_server_socket(const int socket);
 
 int is_matching_pattern(const char *str, const char *pattern);
 void logs(const char *filename, const char *level, const char *text, ...);
-char *get_address_user(const char *name);
-char *get_hostname(char* input);
+char *get_address_mail_from_hostname(const char *name);
+char *get_hostname_from_vrfy(char* input);
+void get_address_from_rcpt(char *input, char *output);
+int check_address_in_mailbox(char *mail);
 
 /* FSM */
 
