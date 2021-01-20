@@ -15,19 +15,26 @@
 #include <errno.h>
 #include <poll.h>
 #include <regex.h>
+#include <time.h>
+#include <stdarg.h>
 
 /* Constants */
 
 #define MASTER 					0
 #define MAXINPUT 				1024
 #define BUFSIZE 				4096
+#define LOGSIZE					100
 #define SIZE 					100
 #define TIME_INF 				-1
-#define AVAILABLE_ENTRY 		-1
+#define INIT_VALUE 				-1
 #define MAX_CLIENTS 			10
 #define PORT 					"2525"
 #define TRUE 					1
 #define FALSE 					0
+#define INFO					"INFO"
+#define ERROR					"ERROR"
+#define NUM_RECORD				10
+#define SIGQUIT					"221 BYE\n"
 
 /* Server State */
 
@@ -38,7 +45,6 @@
 #define RECIPIENTS_SET_STATE 		4
 #define WRITING_MAIL_STATE 			5
 #define READY_TO_DELIVER_STATE 		6
-#define QUIT_STATE 					7
 
 /* Regex message from client */
 
@@ -61,6 +67,12 @@ void close_client_socket(const int socket);
 
 int setup_TCP_server(const char *port);
 void close_server_socket(const int socket);
+
+/* For both client and server */
+
 int is_matching_pattern(const char *str, const char *pattern);
+void logs(const char *filename, const char *level, const char *text, ...);
+char *get_address_user(const char *name);
+char *get_hostname(char* input);
 
 #endif
