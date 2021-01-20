@@ -36,26 +36,46 @@
 #define NUM_RECORD				10
 #define SIGQUIT					"221 BYE\n"
 
-/* Server State */
-
-#define INIT_STATE 					0
-#define BEGIN_STATE 				1
-#define WAIT_STATE 					2
-#define ENVELOPE_CREATED_STATE 		3
-#define RECIPIENTS_SET_STATE 		4
-#define WRITING_MAIL_STATE 			5
-#define READY_TO_DELIVER_STATE 		6
-
 /* Regex message from client */
 
 #define HELO_CMD "(h|H)(e|E)(l|L)(o|O)\\s+.+"
 #define EHLO_CMD "(e|E)(h|H)(l|L)(o|O)\\s+.+"
 #define MAIL_CMD "(m|M)(a|A)(i|I)(l|L)\\s+(f|F)(r|R)(o|O)(m|M)\\s*:\\s*<(\\w+)(\\.|_)?(\\w*)@(\\w+)(\\.(\\w+))+>"
 #define RCPT_CMD "(r|R)(c|C)(p|P)(t|T)\\s+(t|T)(o|O)\\s*:\\s*<(\\w+)(\\.|_)?(\\w*)@(\\w+)(\\.(\\w+))+>"
-#define DATA_CMD "(d|D)(a|A)(t|T)(a|A)"
-#define RSET_CMD "(r|R)(s|S)(e|E)(t|T)"
+#define DATA_CMD "(d|D)(a|A)(t|T)(a|A)\n"
+#define RSET_CMD "(r|R)(s|S)(e|E)(t|T)\n"
 #define VRFY_CMD "(v|V)(r|R)(f|F)(y|Y)\\s+.+"
-#define QUIT_CMD "(q|Q)(u|U)(i|I)(t|T)"
+#define QUIT_CMD "(q|Q)(u|U)(i|I)(t|T)\n"
+
+/* Server States */
+
+typedef enum {
+
+	Init_State,
+	Begin_State,
+	Wait_State,
+	Envelope_Create_State,
+	Recipients_Set_State,
+	Writing_Mail_State,
+	Ready_To_Deliver_State,
+
+} eSystemState;
+
+/* Server Events */
+
+typedef enum {
+
+	Helo_Event,
+	Ehlo_Event,
+	Mail_Event,
+	Rcpt_Event,
+	Data_Event,
+	Rset_Event,
+	Vrfy_Event,
+	Quit_Event,
+	Undefined_Event,
+
+} eSystemEvent;
 
 /* Client */
 
@@ -74,5 +94,10 @@ int is_matching_pattern(const char *str, const char *pattern);
 void logs(const char *filename, const char *level, const char *text, ...);
 char *get_address_user(const char *name);
 char *get_hostname(char* input);
+
+/* FSM */
+
+eSystemEvent event_trigger(char *response);
+eSystemState fsm_state_handler(struct pollfd *pfds, int *nfds, char *response, char *body, eSystemState eCurrentState, eSystemEvent eNewEvent);
 
 #endif
