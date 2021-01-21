@@ -18,6 +18,7 @@
 #include <time.h>
 #include <stdarg.h>
 #include <sys/stat.h>
+#include <uuid/uuid.h>
 
 /* Constants */
 

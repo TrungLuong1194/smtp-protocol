@@ -74,24 +74,31 @@ void send_mail(struct mail mc, int num_cc) {
 
 	char *user;
 	char dirname[num_cc + 1][SIZE];
+	uuid_t uuid[num_cc + 1];
+	char uuid_str[num_cc + 1][37];
 
 	if (num_cc > 0) {
 		// Add dirname for "cc" recipients
 		for (int i = 0; i < num_cc; i++) {
+			uuid_generate_random(uuid[i]);
+			uuid_unparse_lower(uuid[i], uuid_str[i]);
+
 			user = get_hostname_from_address_mail(mc.cc[i]);
-			snprintf(dirname[i], sizeof dirname[i], "../../local/%s/Maildir/mail.txt", user);
+			snprintf(dirname[i], sizeof dirname[i], "../../local/%s/Maildir/%s", user, uuid_str[i]);
 		}
 	}
 
 	// Add dirname for "to" recipients
+	uuid_generate_random(uuid[num_cc]);
+	uuid_unparse_lower(uuid[num_cc], uuid_str[num_cc]);
 	user = get_hostname_from_address_mail(mc.to);
-	snprintf(dirname[num_cc], sizeof dirname[num_cc], "../../local/%s/Maildir/mail.txt", user);
+	snprintf(dirname[num_cc], sizeof dirname[num_cc], "../../local/%s/Maildir/%s", user, uuid_str[num_cc]);
 
 	for (int i = 0; i <= num_cc; i++) {
 		struct tm dt = get_time();
 		FILE *f;
 
-		printf("%s\n", dirname[i]);
+		// printf("%s\n", dirname[i]);
 
 		f = fopen(dirname[i], "w");
 		if (f == NULL) {

@@ -366,6 +366,10 @@ eSystemState fsm_state_handler(struct pollfd *pfds, int *nfds, char *response, e
 
 				eNextState = Envelope_Create_State;
 
+				// Delete old data in mailContent
+				*num_cc = 0;
+				strcpy(mc->body, "");
+
 				// Save "From" to mailContent
 				char addr[SIZE];
 
