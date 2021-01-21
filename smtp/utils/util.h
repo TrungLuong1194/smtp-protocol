@@ -17,6 +17,7 @@
 #include <regex.h>
 #include <time.h>
 #include <stdarg.h>
+#include <sys/stat.h>
 
 /* Constants */
 
@@ -33,18 +34,9 @@
 #define FALSE 					0
 #define INFO					"INFO"
 #define ERROR					"ERROR"
-#define NUM_RECORD				10
+#define NUM_RECORD				5
 #define SIGQUIT					"221 BYE\n"
-
-/* Server State */
-
-#define INIT_STATE 					0
-#define BEGIN_STATE 				1
-#define WAIT_STATE 					2
-#define ENVELOPE_CREATED_STATE 		3
-#define RECIPIENTS_SET_STATE 		4
-#define WRITING_MAIL_STATE 			5
-#define READY_TO_DELIVER_STATE 		6
+#define MAX_CC					10
 
 /* Regex message from client */
 
@@ -52,10 +44,60 @@
 #define EHLO_CMD "(e|E)(h|H)(l|L)(o|O)\\s+.+"
 #define MAIL_CMD "(m|M)(a|A)(i|I)(l|L)\\s+(f|F)(r|R)(o|O)(m|M)\\s*:\\s*<(\\w+)(\\.|_)?(\\w*)@(\\w+)(\\.(\\w+))+>"
 #define RCPT_CMD "(r|R)(c|C)(p|P)(t|T)\\s+(t|T)(o|O)\\s*:\\s*<(\\w+)(\\.|_)?(\\w*)@(\\w+)(\\.(\\w+))+>"
-#define DATA_CMD "(d|D)(a|A)(t|T)(a|A)"
-#define RSET_CMD "(r|R)(s|S)(e|E)(t|T)"
+#define DATA_CMD "(d|D)(a|A)(t|T)(a|A)\n"
+#define RSET_CMD "(r|R)(s|S)(e|E)(t|T)\n"
 #define VRFY_CMD "(v|V)(r|R)(f|F)(y|Y)\\s+.+"
-#define QUIT_CMD "(q|Q)(u|U)(i|I)(t|T)"
+#define QUIT_CMD "(q|Q)(u|U)(i|I)(t|T)\n"
+
+/* Server States */
+
+typedef enum {
+
+	Init_State,
+	Begin_State,
+	Wait_State,
+	Envelope_Create_State,
+	Recipients_Set_State,
+	Writing_Mail_State,
+	Ready_To_Deliver_State,
+
+} eSystemState;
+
+/* Server Events */
+
+typedef enum {
+
+	Helo_Event,
+	Ehlo_Event,
+	Mail_Event,
+	Rcpt_Event,
+	Data_Event,
+	Rset_Event,
+	Vrfy_Event,
+	Quit_Event,
+	Undefined_Event,
+
+} eSystemEvent;
+
+/* Mailbox record */
+
+struct mailbox {
+	int id;
+	char *hostname;
+	char *address;
+	char *dirname1;
+	char *dirname2;
+};
+
+/* Mail Content */
+
+struct mail {
+	char from[SIZE];
+	char to[SIZE];
+	char cc[MAX_CC][SIZE];
+	struct tm datetime;
+	char body[BUFSIZE];
+};
 
 /* Client */
 
@@ -67,12 +109,24 @@ void close_client_socket(const int socket);
 
 int setup_TCP_server(const char *port);
 void close_server_socket(const int socket);
+void send_mail(struct mail mc, int num_cc);
 
 /* For both client and server */
 
 int is_matching_pattern(const char *str, const char *pattern);
+struct tm get_time();
 void logs(const char *filename, const char *level, const char *text, ...);
-char *get_address_user(const char *name);
-char *get_hostname(char* input);
+struct mailbox *init_mailbox();
+char *get_address_mail_from_hostname(const char *name);
+char *get_hostname_from_address_mail(const char *addr);
+char *get_hostname_from_vrfy(char* input);
+void get_address_from_rcpt_or_mail(char *input, char *output);
+int check_address_in_mailbox(char *mail);
+
+/* FSM */
+
+eSystemEvent event_trigger(char *response);
+eSystemState fsm_state_handler(struct pollfd *pfds, int *nfds, char *response, eSystemState eCurrentState, 
+	eSystemEvent eNewEvent, struct mail *mc, int *num_cc);
 
 #endif
