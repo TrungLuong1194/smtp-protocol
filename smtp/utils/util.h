@@ -17,6 +17,7 @@
 #include <regex.h>
 #include <time.h>
 #include <stdarg.h>
+#include <sys/stat.h>
 
 /* Constants */
 
@@ -33,8 +34,9 @@
 #define FALSE 					0
 #define INFO					"INFO"
 #define ERROR					"ERROR"
-#define NUM_RECORD				10
+#define NUM_RECORD				5
 #define SIGQUIT					"221 BYE\n"
+#define MAX_CC					10
 
 /* Regex message from client */
 
@@ -83,16 +85,18 @@ struct mailbox {
 	int id;
 	char *hostname;
 	char *address;
+	char *dirname1;
+	char *dirname2;
 };
 
 /* Mail Content */
 
 struct mail {
-	char *from;
-	char *to;
-	char *cc;
+	char from[SIZE];
+	char to[SIZE];
+	char cc[MAX_CC][SIZE];
 	struct tm datetime;
-	char *body;
+	char body[BUFSIZE];
 };
 
 /* Client */
@@ -105,12 +109,16 @@ void close_client_socket(const int socket);
 
 int setup_TCP_server(const char *port);
 void close_server_socket(const int socket);
+void send_mail(struct mail mc, int num_cc);
 
 /* For both client and server */
 
 int is_matching_pattern(const char *str, const char *pattern);
+struct tm get_time();
 void logs(const char *filename, const char *level, const char *text, ...);
+struct mailbox *init_mailbox();
 char *get_address_mail_from_hostname(const char *name);
+char *get_hostname_from_address_mail(const char *addr);
 char *get_hostname_from_vrfy(char* input);
 void get_address_from_rcpt_or_mail(char *input, char *output);
 int check_address_in_mailbox(char *mail);
@@ -118,7 +126,7 @@ int check_address_in_mailbox(char *mail);
 /* FSM */
 
 eSystemEvent event_trigger(char *response);
-eSystemState fsm_state_handler(struct pollfd *pfds, int *nfds, char *response, char *body, 
-	eSystemState eCurrentState, eSystemEvent eNewEvent, struct mail *mailContent);
+eSystemState fsm_state_handler(struct pollfd *pfds, int *nfds, char *response, eSystemState eCurrentState, 
+	eSystemEvent eNewEvent, struct mail *mc, int *num_cc);
 
 #endif

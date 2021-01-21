@@ -67,3 +67,57 @@ void close_server_socket(const int socket) {
 	printf("Finished.\n");
 	logs("../../logs/server.log", INFO, "Finished.");
 }
+
+/* Send mail when state is Ready_To_Deliver_State */
+
+void send_mail(struct mail mc, int num_cc) {
+
+	char *user;
+	char dirname[num_cc + 1][SIZE];
+
+	if (num_cc > 0) {
+		// Add dirname for "cc" recipients
+		for (int i = 0; i < num_cc; i++) {
+			user = get_hostname_from_address_mail(mc.cc[i]);
+			snprintf(dirname[i], sizeof dirname[i], "../../local/%s/Maildir/mail.txt", user);
+		}
+	}
+
+	// Add dirname for "to" recipients
+	user = get_hostname_from_address_mail(mc.to);
+	snprintf(dirname[num_cc], sizeof dirname[num_cc], "../../local/%s/Maildir/mail.txt", user);
+
+	for (int i = 0; i <= num_cc; i++) {
+		struct tm dt = get_time();
+		FILE *f;
+
+		printf("%s\n", dirname[i]);
+
+		f = fopen(dirname[i], "w");
+		if (f == NULL) {
+			printf("Unable to create file.\n");
+			exit(1);
+		}
+
+		fprintf(f, "FROM: <%s>\n", mc.from);
+		fprintf(f, "TO: <%s>\n", mc.to);
+
+		if (num_cc > 0) {
+			fprintf(f, "CC:");
+
+			for (int i = 0; i < num_cc; i++) {
+				if (i != 0) {
+					fprintf(f, ", <%s>", mc.cc[i]);
+				} else {
+					fprintf(f, " <%s>", mc.cc[i]);
+				}
+			}
+
+			fprintf(f, "\n");
+		}
+
+		fprintf(f, "DATE: %d-%02d-%02d %02d:%02d:%02d\n\n", dt.tm_year + 1900, dt.tm_mon + 1, dt.tm_mday, dt.tm_hour, dt.tm_min, dt.tm_sec);
+		fprintf(f, "%s", mc.body);
+		fclose(f);
+	}
+}

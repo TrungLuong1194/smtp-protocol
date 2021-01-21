@@ -59,52 +59,60 @@ void logs(const char *filename, const char *level, const char *text, ...) {
 	fclose(f);
 }
 
-/* Get address mail from hostname */
+/* Initial data for mailbox */
 
-char *get_address_mail_from_hostname(const char *name) {
+struct mailbox *init_mailbox() {
 
-	// Initialize data for mailbox
-	struct mailbox user[NUM_RECORD];
-
+	struct mailbox *user = malloc(sizeof(struct mailbox) * NUM_RECORD);
+	
 	user[0].id = 0;
 	user[0].hostname = "superuser";
 	user[0].address = "superuser@server.server";
+	user[0].dirname1 = "../../local/superuser";
+	user[0].dirname2 = "../../local/superuser/Maildir";
+	mkdir(user[0].dirname1, 0777);
+	mkdir(user[0].dirname2, 0777);
 
 	user[1].id = 1;
 	user[1].hostname = "user1";
 	user[1].address = "user1@server.server";
+	user[1].dirname1 = "../../local/user1";
+	user[1].dirname2 = "../../local/user1/Maildir";
+	mkdir(user[1].dirname1, 0777);
+	mkdir(user[1].dirname2, 0777);
 
 	user[2].id = 2;
 	user[2].hostname = "user2";
 	user[2].address = "user2@server.server";
+	user[2].dirname1 = "../../local/user2";
+	user[2].dirname2 = "../../local/user2/Maildir";
+	mkdir(user[2].dirname1, 0777);
+	mkdir(user[2].dirname2, 0777);
 
 	user[3].id = 3;
 	user[3].hostname = "user3";
 	user[3].address = "user3@server.server";
+	user[3].dirname1 = "../../local/user3";
+	user[3].dirname2 = "../../local/user3/Maildir";
+	mkdir(user[3].dirname1, 0777);
+	mkdir(user[3].dirname2, 0777);
 
 	user[4].id = 4;
 	user[4].hostname = "user4";
 	user[4].address = "user4@server.server";
+	user[4].dirname1 = "../../local/user4";
+	user[4].dirname2 = "../../local/user4/Maildir";
+	mkdir(user[4].dirname1, 0777);
+	mkdir(user[4].dirname2, 0777);
+	
+	return user;
+}
 
-	user[5].id = 5;
-	user[5].hostname = "user5";
-	user[5].address = "user5@server.server";
+/* Get address mail from hostname */
 
-	user[6].id = 6;
-	user[6].hostname = "user6";
-	user[6].address = "user6@server.server";
+char *get_address_mail_from_hostname(const char *name) {
 
-	user[7].id = 7;
-	user[7].hostname = "user7";
-	user[7].address = "user7@server.server";
-
-	user[8].id = 8;
-	user[8].hostname = "user8";
-	user[8].address = "user8@server.server";
-
-	user[9].id = 9;
-	user[9].hostname = "user9";
-	user[9].address = "user9@server.server";
+	struct mailbox *user = init_mailbox();
 
 	// Check mailbox record
 	char *addr;
@@ -120,6 +128,28 @@ char *get_address_mail_from_hostname(const char *name) {
 	addr = "No such user here";
 
 	return addr;
+}
+
+/* Get hostname from address mail */
+
+char *get_hostname_from_address_mail(const char *addr) {
+
+	struct mailbox *user = init_mailbox();
+
+	// Check mailbox record
+	char *name;
+
+	for (int i = 0; i < NUM_RECORD; i++) {
+		if (strcmp(addr, user[i].address) == 0) {
+			name = user[i].hostname;
+
+			return name;
+		}
+	}
+
+	name = "No such user here";
+
+	return name;
 }
 
 /* Get hostname from VRFY command */
@@ -178,48 +208,7 @@ void get_address_from_rcpt_or_mail(char *input, char *output) {
 
 int check_address_in_mailbox(char *mail) {
 
-	// Initialize data for mailbox
-	struct mailbox user[NUM_RECORD];
-
-	user[0].id = 0;
-	user[0].hostname = "superuser";
-	user[0].address = "superuser@server.server";
-
-	user[1].id = 1;
-	user[1].hostname = "user1";
-	user[1].address = "user1@server.server";
-
-	user[2].id = 2;
-	user[2].hostname = "user2";
-	user[2].address = "user2@server.server";
-
-	user[3].id = 3;
-	user[3].hostname = "user3";
-	user[3].address = "user3@server.server";
-
-	user[4].id = 4;
-	user[4].hostname = "user4";
-	user[4].address = "user4@server.server";
-
-	user[5].id = 5;
-	user[5].hostname = "user5";
-	user[5].address = "user5@server.server";
-
-	user[6].id = 6;
-	user[6].hostname = "user6";
-	user[6].address = "user6@server.server";
-
-	user[7].id = 7;
-	user[7].hostname = "user7";
-	user[7].address = "user7@server.server";
-
-	user[8].id = 8;
-	user[8].hostname = "user8";
-	user[8].address = "user8@server.server";
-
-	user[9].id = 9;
-	user[9].hostname = "user9";
-	user[9].address = "user9@server.server";
+	struct mailbox *user = init_mailbox();
 
 	int result = FALSE;
 

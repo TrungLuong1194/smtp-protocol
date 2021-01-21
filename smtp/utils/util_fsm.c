@@ -31,8 +31,8 @@ eSystemEvent event_trigger(char *response) {
 
 /* Handler event in each State */
 
-eSystemState fsm_state_handler(struct pollfd *pfds, int *nfds, char *response, char *body, 
-	eSystemState eCurrentState, eSystemEvent eNewEvent, struct mail *mailContent) {
+eSystemState fsm_state_handler(struct pollfd *pfds, int *nfds, char *response, eSystemState eCurrentState, 
+	eSystemEvent eNewEvent, struct mail *mc, int *num_cc) {
 
 	char *msg;
 	eSystemState eNextState = eCurrentState;
@@ -110,12 +110,12 @@ eSystemState fsm_state_handler(struct pollfd *pfds, int *nfds, char *response, c
 				if (strcmp(res, "No such user here") == 0) {
 					char buf[BUFSIZE];
 
-					snprintf(buf, sizeof buf, "%s%s%s", "550 ", res, "\n");
+					snprintf(buf, sizeof buf, "550 %s\n", res);
 					send(pfds->fd, buf, strlen(buf), 0);
 				} else {
 					char buf[BUFSIZE];
 
-					snprintf(buf, sizeof buf, "%s%s%s", "250 ", res, "\n");
+					snprintf(buf, sizeof buf, "250 %s\n", res);
 					send(pfds->fd, buf, strlen(buf), 0);
 				}
 			} else if (eNewEvent == Mail_Event) {
@@ -125,11 +125,11 @@ eSystemState fsm_state_handler(struct pollfd *pfds, int *nfds, char *response, c
 
 				eNextState = Envelope_Create_State;
 
-				// Save to mailContent
+				// Save "From" to mailContent
 				char addr[SIZE];
 
 				get_address_from_rcpt_or_mail(response, addr);
-				mailContent->from = addr;
+				strcpy(mc->from, addr);
 			} else if (eNewEvent == Rcpt_Event) {
 				logs("../../logs/server.log", INFO, "RCPT Command.");
 				msg = "503 Error: need MAIL command\n";
@@ -179,12 +179,12 @@ eSystemState fsm_state_handler(struct pollfd *pfds, int *nfds, char *response, c
 				if (strcmp(res, "No such user here") == 0) {
 					char buf[BUFSIZE];
 
-					snprintf(buf, sizeof buf, "%s%s%s", "550 ", res, "\n");
+					snprintf(buf, sizeof buf, "550 %s\n", res);
 					send(pfds->fd, buf, strlen(buf), 0);
 				} else {
 					char buf[BUFSIZE];
 
-					snprintf(buf, sizeof buf, "%s%s%s", "250 ", res, "\n");
+					snprintf(buf, sizeof buf, "250 %s\n", res);
 					send(pfds->fd, buf, strlen(buf), 0);
 				}
 			} else if (eNewEvent == Mail_Event) {
@@ -206,6 +206,9 @@ eSystemState fsm_state_handler(struct pollfd *pfds, int *nfds, char *response, c
 					msg = "550 No such user here\n";
 					send(pfds->fd, msg, strlen(msg), 0);
 				}
+
+				// Save "To" to mailContent
+				strcpy(mc->to, addr);
 			} else if (eNewEvent == Data_Event) {
 				logs("../../logs/server.log", INFO, "DATA Command.");
 				msg = "503 Error: need RCPT command\n";
@@ -253,12 +256,12 @@ eSystemState fsm_state_handler(struct pollfd *pfds, int *nfds, char *response, c
 				if (strcmp(res, "No such user here") == 0) {
 					char buf[BUFSIZE];
 
-					snprintf(buf, sizeof buf, "%s%s%s", "550 ", res, "\n");
+					snprintf(buf, sizeof buf, "550 %s\n", res);
 					send(pfds->fd, buf, strlen(buf), 0);
 				} else {
 					char buf[BUFSIZE];
 
-					snprintf(buf, sizeof buf, "%s%s%s", "250 ", res, "\n");
+					snprintf(buf, sizeof buf, "250 %s\n", res);
 					send(pfds->fd, buf, strlen(buf), 0);
 				}
 			} else if (eNewEvent == Mail_Event) {
@@ -274,6 +277,10 @@ eSystemState fsm_state_handler(struct pollfd *pfds, int *nfds, char *response, c
 				if (check_address_in_mailbox(addr) == TRUE) {
 					msg = "250 OK\n";
 					send(pfds->fd, msg, strlen(msg), 0);
+
+					// Save "CC" to mailContent
+					strcpy(mc->cc[*num_cc], addr);
+					(*num_cc)++;
 				} else {
 					msg = "550 No such user here\n";
 					send(pfds->fd, msg, strlen(msg), 0);
@@ -313,7 +320,7 @@ eSystemState fsm_state_handler(struct pollfd *pfds, int *nfds, char *response, c
 
 			if (strcmp(response, ".\n") != 0) {
 				logs("../../logs/server.log", INFO, "Add data.");
-				strcat(body, response);
+				strcat(mc->body, response);
 			} else {
 				logs("../../logs/server.log", INFO, "Complete data.");
 				msg = "250 OK\n";
@@ -344,12 +351,12 @@ eSystemState fsm_state_handler(struct pollfd *pfds, int *nfds, char *response, c
 				if (strcmp(res, "No such user here") == 0) {
 					char buf[BUFSIZE];
 
-					snprintf(buf, sizeof buf, "%s%s%s", "550 ", res, "\n");
+					snprintf(buf, sizeof buf, "550 %s\n", res);
 					send(pfds->fd, buf, strlen(buf), 0);
 				} else {
 					char buf[BUFSIZE];
 
-					snprintf(buf, sizeof buf, "%s%s%s", "250 ", res, "\n");
+					snprintf(buf, sizeof buf, "250 %s\n", res);
 					send(pfds->fd, buf, strlen(buf), 0);
 				}
 			} else if (eNewEvent == Mail_Event) {
@@ -359,11 +366,11 @@ eSystemState fsm_state_handler(struct pollfd *pfds, int *nfds, char *response, c
 
 				eNextState = Envelope_Create_State;
 
-				// Save to mailContent
+				// Save "From" to mailContent
 				char addr[SIZE];
 
 				get_address_from_rcpt_or_mail(response, addr);
-				mailContent->from = addr;
+				strcpy(mc->from, addr);
 			} else if (eNewEvent == Rcpt_Event) {
 				logs("../../logs/server.log", INFO, "RCPT Command.");
 				msg = "503 Error: need MAIL command\n";

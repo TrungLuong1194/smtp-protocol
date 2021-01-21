@@ -5,6 +5,14 @@ int main() {
 	logs("../../logs/server.log", INFO, "Server start to configure.");
 	int socket_listen = setup_TCP_server(PORT);
 
+	// Initial data for mailbox
+	struct mailbox *user = init_mailbox();
+
+	printf("List mailbox:\n");
+	for (int i = 0; i < NUM_RECORD; i++) {
+		printf("- %s\n", user[i].hostname);
+	}
+
 	// poll() is used to wait for an event on one or more sockets
 	struct pollfd pollfds[MAX_CLIENTS + 1];
 
@@ -24,21 +32,15 @@ int main() {
 		eCurrentState[i] = Init_State;
 	}
 
+	// Initialize Mail Content
+	struct mail mailContent[MAX_CLIENTS];
+
+	int num_cc[MAX_CLIENTS]; // Number of recipients cc
+
 	printf("Waiting for connections...\n");
 	logs("../../logs/server.log", INFO, "Waiting for connections...");
 
-	/* Initialize Mail Content */
-	struct mail mailContent;
-
-	mailContent.from = "";
-	mailContent.to = "";
-	mailContent.cc = "";
-	mailContent.body = "";
-
 	while(TRUE) {
-
-		char *msg; // Store reponse from server to client
-		char body[BUFSIZE]; // Store data of body message
 
 		if (poll(pollfds, nfds + 1, TIME_INF) < 0) {
 			fprintf(stderr, "poll() failed. (%d)\n", errno);
@@ -68,6 +70,8 @@ int main() {
 					nfds++;
 
 					eCurrentState[i] = Begin_State;
+					num_cc[i] = 0;
+
 					break;
 				}
 			}
@@ -81,6 +85,8 @@ int main() {
 			logs("../../logs/server.log", INFO, "New connection from %s", address_buffer);
 
 			// Send 220 code
+			char *msg;
+
 			msg = "220 server.server Simple Mail Transfer Service Ready\n";
 			send(socket_client, msg, strlen(msg), 0);
 		}
@@ -111,10 +117,13 @@ int main() {
 				response[bytes_received] = '\0'; // terminate the string
 
 				eSystemEvent eNewEvent = event_trigger(response);
-				eCurrentState[i] = fsm_state_handler(&pollfds[i], &nfds, response, body, eCurrentState[i], eNewEvent, &mailContent);
+				eSystemState tmp = eCurrentState[i];
+				eCurrentState[i] = fsm_state_handler(&pollfds[i], &nfds, response, eCurrentState[i], eNewEvent, &mailContent[i], &num_cc[i]);
 
-				printf("%s\n", mailContent.from);
-				
+				// Create maildir for each recipient
+				if (tmp == Writing_Mail_State && eCurrentState[i] == Ready_To_Deliver_State) {
+					send_mail(mailContent[i], num_cc[i]);
+				}
 			}
 		}
 	}
