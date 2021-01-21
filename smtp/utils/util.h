@@ -85,6 +85,16 @@ struct mailbox {
 	char *address;
 };
 
+/* Mail Content */
+
+struct mail {
+	char *from;
+	char *to;
+	char *cc;
+	struct tm datetime;
+	char *body;
+};
+
 /* Client */
 
 int setup_TCP_client(const char *server, const char *port);
@@ -102,12 +112,13 @@ int is_matching_pattern(const char *str, const char *pattern);
 void logs(const char *filename, const char *level, const char *text, ...);
 char *get_address_mail_from_hostname(const char *name);
 char *get_hostname_from_vrfy(char* input);
-void get_address_from_rcpt(char *input, char *output);
+void get_address_from_rcpt_or_mail(char *input, char *output);
 int check_address_in_mailbox(char *mail);
 
 /* FSM */
 
 eSystemEvent event_trigger(char *response);
-eSystemState fsm_state_handler(struct pollfd *pfds, int *nfds, char *response, char *body, eSystemState eCurrentState, eSystemEvent eNewEvent);
+eSystemState fsm_state_handler(struct pollfd *pfds, int *nfds, char *response, char *body, 
+	eSystemState eCurrentState, eSystemEvent eNewEvent, struct mail *mailContent);
 
 #endif

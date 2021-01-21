@@ -31,7 +31,8 @@ eSystemEvent event_trigger(char *response) {
 
 /* Handler event in each State */
 
-eSystemState fsm_state_handler(struct pollfd *pfds, int *nfds, char *response, char *body, eSystemState eCurrentState, eSystemEvent eNewEvent) {
+eSystemState fsm_state_handler(struct pollfd *pfds, int *nfds, char *response, char *body, 
+	eSystemState eCurrentState, eSystemEvent eNewEvent, struct mail *mailContent) {
 
 	char *msg;
 	eSystemState eNextState = eCurrentState;
@@ -123,6 +124,12 @@ eSystemState fsm_state_handler(struct pollfd *pfds, int *nfds, char *response, c
 				send(pfds->fd, msg, strlen(msg), 0);
 
 				eNextState = Envelope_Create_State;
+
+				// Save to mailContent
+				char addr[SIZE];
+
+				get_address_from_rcpt_or_mail(response, addr);
+				mailContent->from = addr;
 			} else if (eNewEvent == Rcpt_Event) {
 				logs("../../logs/server.log", INFO, "RCPT Command.");
 				msg = "503 Error: need MAIL command\n";
@@ -188,7 +195,7 @@ eSystemState fsm_state_handler(struct pollfd *pfds, int *nfds, char *response, c
 				logs("../../logs/server.log", INFO, "RCPT Command.");
 				char addr[SIZE];
 
-				get_address_from_rcpt(response, addr);
+				get_address_from_rcpt_or_mail(response, addr);
 
 				if (check_address_in_mailbox(addr) == TRUE) {
 					msg = "250 OK\n";
@@ -262,7 +269,7 @@ eSystemState fsm_state_handler(struct pollfd *pfds, int *nfds, char *response, c
 				logs("../../logs/server.log", INFO, "RCPT Command.");
 				char addr[SIZE];
 
-				get_address_from_rcpt(response, addr);
+				get_address_from_rcpt_or_mail(response, addr);
 
 				if (check_address_in_mailbox(addr) == TRUE) {
 					msg = "250 OK\n";
@@ -351,6 +358,12 @@ eSystemState fsm_state_handler(struct pollfd *pfds, int *nfds, char *response, c
 				send(pfds->fd, msg, strlen(msg), 0);
 
 				eNextState = Envelope_Create_State;
+
+				// Save to mailContent
+				char addr[SIZE];
+
+				get_address_from_rcpt_or_mail(response, addr);
+				mailContent->from = addr;
 			} else if (eNewEvent == Rcpt_Event) {
 				logs("../../logs/server.log", INFO, "RCPT Command.");
 				msg = "503 Error: need MAIL command\n";

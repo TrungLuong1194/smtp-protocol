@@ -150,9 +150,9 @@ char *get_hostname_from_vrfy(char* input) {
 	return output;
 }
 
-/* Get address mail from RCPT command */
+/* Get address mail from RCPT/MAIL command */
 
-void get_address_from_rcpt(char *input, char *output) {
+void get_address_from_rcpt_or_mail(char *input, char *output) {
 	
 	int start, end;
 	

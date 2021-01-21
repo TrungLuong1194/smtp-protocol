@@ -27,6 +27,14 @@ int main() {
 	printf("Waiting for connections...\n");
 	logs("../../logs/server.log", INFO, "Waiting for connections...");
 
+	/* Initialize Mail Content */
+	struct mail mailContent;
+
+	mailContent.from = "";
+	mailContent.to = "";
+	mailContent.cc = "";
+	mailContent.body = "";
+
 	while(TRUE) {
 
 		char *msg; // Store reponse from server to client
@@ -103,7 +111,10 @@ int main() {
 				response[bytes_received] = '\0'; // terminate the string
 
 				eSystemEvent eNewEvent = event_trigger(response);
-				eCurrentState[i] = fsm_state_handler(&pollfds[i], &nfds, response, body, eCurrentState[i], eNewEvent);
+				eCurrentState[i] = fsm_state_handler(&pollfds[i], &nfds, response, body, eCurrentState[i], eNewEvent, &mailContent);
+
+				printf("%s\n", mailContent.from);
+				
 			}
 		}
 	}
