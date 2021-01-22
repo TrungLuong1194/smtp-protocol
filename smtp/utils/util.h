@@ -38,6 +38,8 @@
 #define NUM_RECORD				5
 #define SIGQUIT					"221 BYE\n"
 #define MAX_CC					10
+#define SERVER_LOG_DIR			"../../logs/server.log"
+#define CLIENT_LOG_DIR			"../../logs/client.log"
 
 /* Regex message from client */
 

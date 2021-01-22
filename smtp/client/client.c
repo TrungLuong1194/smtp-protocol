@@ -6,12 +6,12 @@ int main() {
 
 	get_input("Mail server: ", server);
 	printf("Connecting to server: %s:%s\n", server, PORT);
-	logs("../../logs/client.log", INFO, "Connecting to server: %s:%s", server, PORT);
+	logs(CLIENT_LOG_DIR, INFO, "Connecting to server: %s:%s", server, PORT);
 
 	int socket_peer = setup_TCP_client(server, PORT);
 
 	printf("\n-- Begin dialog -- \n\n");
-	logs("../../logs/client.log", INFO, "Starting to communication with server...");
+	logs(CLIENT_LOG_DIR, INFO, "Starting to communication with server...");
 	
     while(TRUE) {
 
@@ -31,7 +31,7 @@ int main() {
 		// poll() is used to wait for an event on one or more sockets
 		if (poll(pollfds, nfds, TIME_INF) < 0) {
 			fprintf(stderr, "poll() failed. (%d)\n", errno);
-			logs("../../logs/client.log", ERROR, "poll() failed. (%d)", errno);
+			logs(CLIENT_LOG_DIR, ERROR, "poll() failed. (%d)", errno);
 			exit(1);
 		}
 
@@ -43,7 +43,7 @@ int main() {
 			int bytes_received = recv(socket_peer, response, BUFSIZE, 0);
 			if (bytes_received < 1) {
 				printf("Connection closed by host.\n");
-				logs("../../logs/client.log", ERROR, "Connection closed by host.");
+				logs(CLIENT_LOG_DIR, ERROR, "Connection closed by host.");
 				break;
 			}
 

@@ -1,6 +1,0 @@
-FROM: <cl1@client.client>
-TO: <user4@server.server>
-DATE: 2021-01-22 00:42:10
-
-Hello
-World
