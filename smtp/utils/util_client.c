@@ -33,7 +33,7 @@ int setup_TCP_client(const char *server, const char *port) {
 
 	// socket() creates and initializes a new socket
 	printf("Creating socket...\n");
-	logs("../../logs/client.log", INFO, "Creating socket...");
+	logs(CLIENT_LOG_DIR, INFO, "Creating socket...");
 
 	int socket_peer;
 
@@ -41,23 +41,23 @@ int setup_TCP_client(const char *server, const char *port) {
 		peer_address->ai_socktype, peer_address->ai_protocol);
 	if (socket_peer < 0) {
 		fprintf(stderr, "socket() failed. (%d)\n", errno);
-		logs("../../logs/client.log", ERROR, "socket() failed. (%d)", errno);
+		logs(CLIENT_LOG_DIR, ERROR, "socket() failed. (%d)", errno);
 		exit(1);
 	}
 
 	// connect() is used on the client to set the remote address and port
 	printf("Connecting...\n");
-	logs("../../logs/client.log", INFO, "Connecting...");
+	logs(CLIENT_LOG_DIR, INFO, "Connecting...");
 
 	if (connect(socket_peer, peer_address->ai_addr, peer_address->ai_addrlen) < 0) {
 		fprintf(stderr, "connect() failed. (%d)\n", errno);
-		logs("../../logs/client.log", ERROR, "connect() failed. (%d)", errno);
+		logs(CLIENT_LOG_DIR, ERROR, "connect() failed. (%d)", errno);
 		exit(1);
 	}
 
 	freeaddrinfo(peer_address);
 	printf("Connected.\n");
-	logs("../../logs/client.log", INFO, "Connected.");
+	logs(CLIENT_LOG_DIR, INFO, "Connected.");
 
     return socket_peer;
 }
@@ -80,8 +80,8 @@ void get_input(const char *prompt, char *buffer) {
 void close_client_socket(const int socket) {
 
 	printf("Closing socket...\n");
-	logs("../../logs/client.log", INFO, "Closing socket...");
+	logs(CLIENT_LOG_DIR, INFO, "Closing socket...");
 	close(socket);
 	printf("Finished.\n");
-	logs("../../logs/client.log", INFO, "Finished.");
+	logs(CLIENT_LOG_DIR, INFO, "Finished.");
 }

@@ -20,7 +20,7 @@ int setup_TCP_server(const char *port) {
 
 	// socket() creates and initializes a new socket
 	printf("Creating socket...\n");
-	logs("../../logs/server.log", INFO, "Creating socket...");
+	logs(SERVER_LOG_DIR, INFO, "Creating socket...");
 
 	int socket_listen;
 
@@ -28,17 +28,17 @@ int setup_TCP_server(const char *port) {
 		bind_address->ai_socktype, bind_address->ai_protocol);
 	if (socket_listen < 0) {
 		fprintf(stderr, "socket() failed. (%d)\n", errno);
-		logs("../../logs/server.log", ERROR, "socket() failed. (%d)", errno);
+		logs(SERVER_LOG_DIR, ERROR, "socket() failed. (%d)", errno);
 		exit(1);
 	}
 
 	// bind() associates a socket with a particular local IP address and port number
 	printf("Binding socket to local address...\n");
-	logs("../../logs/server.log", INFO, "Binding socket to local address...");
+	logs(SERVER_LOG_DIR, INFO, "Binding socket to local address...");
 
 	if (bind(socket_listen, bind_address->ai_addr, bind_address->ai_addrlen) < 0) {
 		fprintf(stderr, "bind() failed. (%d)\n", errno);
-		logs("../../logs/server.log", ERROR, "bind() failed. (%d)", errno);
+		logs(SERVER_LOG_DIR, ERROR, "bind() failed. (%d)", errno);
 		exit(1);
 	}
 
@@ -46,11 +46,11 @@ int setup_TCP_server(const char *port) {
 
 	// listen() is used on the server to cause a TCP socket to listen for new connections
 	printf("Listening...\n");
-	logs("../../logs/server.log", INFO, "Listening...");
+	logs(SERVER_LOG_DIR, INFO, "Listening...");
 
 	if (listen(socket_listen, MAX_CLIENTS) < 0) {
 		fprintf(stderr, "listen() failed. (%d)\n", errno);
-		logs("../../logs/server.log", ERROR, "listen() failed. (%d)", errno);
+		logs(SERVER_LOG_DIR, ERROR, "listen() failed. (%d)", errno);
 		exit(1);
 	}
 
@@ -62,10 +62,10 @@ int setup_TCP_server(const char *port) {
 void close_server_socket(const int socket) {
 
 	printf("Closing listening socket...\n");
-	logs("../../logs/server.log", INFO, "Closing listening socket...");
+	logs(SERVER_LOG_DIR, INFO, "Closing listening socket...");
 	close(socket);
 	printf("Finished.\n");
-	logs("../../logs/server.log", INFO, "Finished.");
+	logs(SERVER_LOG_DIR, INFO, "Finished.");
 }
 
 /* Send mail when state is Ready_To_Deliver_State */
@@ -74,24 +74,31 @@ void send_mail(struct mail mc, int num_cc) {
 
 	char *user;
 	char dirname[num_cc + 1][SIZE];
+	uuid_t uuid[num_cc + 1];
+	char uuid_str[num_cc + 1][37];
 
 	if (num_cc > 0) {
 		// Add dirname for "cc" recipients
 		for (int i = 0; i < num_cc; i++) {
+			uuid_generate_random(uuid[i]);
+			uuid_unparse_lower(uuid[i], uuid_str[i]);
+
 			user = get_hostname_from_address_mail(mc.cc[i]);
-			snprintf(dirname[i], sizeof dirname[i], "../../local/%s/Maildir/mail.txt", user);
+			snprintf(dirname[i], sizeof dirname[i], "../../local/%s/Maildir/%s", user, uuid_str[i]);
 		}
 	}
 
 	// Add dirname for "to" recipients
+	uuid_generate_random(uuid[num_cc]);
+	uuid_unparse_lower(uuid[num_cc], uuid_str[num_cc]);
 	user = get_hostname_from_address_mail(mc.to);
-	snprintf(dirname[num_cc], sizeof dirname[num_cc], "../../local/%s/Maildir/mail.txt", user);
+	snprintf(dirname[num_cc], sizeof dirname[num_cc], "../../local/%s/Maildir/%s", user, uuid_str[num_cc]);
 
 	for (int i = 0; i <= num_cc; i++) {
 		struct tm dt = get_time();
 		FILE *f;
 
-		printf("%s\n", dirname[i]);
+		// printf("%s\n", dirname[i]);
 
 		f = fopen(dirname[i], "w");
 		if (f == NULL) {

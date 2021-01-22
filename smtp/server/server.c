@@ -2,7 +2,7 @@
 
 int main() {
 
-	logs("../../logs/server.log", INFO, "Server start to configure.");
+	logs(SERVER_LOG_DIR, INFO, "Server start to configure.");
 	int socket_listen = setup_TCP_server(PORT);
 
 	// Initial data for mailbox
@@ -38,13 +38,13 @@ int main() {
 	int num_cc[MAX_CLIENTS]; // Number of recipients cc
 
 	printf("Waiting for connections...\n");
-	logs("../../logs/server.log", INFO, "Waiting for connections...");
+	logs(SERVER_LOG_DIR, INFO, "Waiting for connections...");
 
 	while(TRUE) {
 
 		if (poll(pollfds, nfds + 1, TIME_INF) < 0) {
 			fprintf(stderr, "poll() failed. (%d)\n", errno);
-			logs("../../logs/server.log", ERROR, "poll() failed. (%d)", errno);
+			logs(SERVER_LOG_DIR, ERROR, "poll() failed. (%d)", errno);
 			exit(1);
 		}
 
@@ -58,7 +58,7 @@ int main() {
 			int socket_client = accept(socket_listen, (struct sockaddr *) &client_address, &client_len);
 			if (socket_client < 0) {
 				fprintf(stderr, "accept() failed. (%d)\n", errno);
-				logs("../../logs/server.log", ERROR, "accept() failed. (%d)", errno);
+				logs(SERVER_LOG_DIR, ERROR, "accept() failed. (%d)", errno);
 				exit(1);
 			}
 
@@ -82,7 +82,7 @@ int main() {
 			getnameinfo((struct sockaddr*) &client_address, client_len, 
 				address_buffer, sizeof(address_buffer), 0, 0, NI_NUMERICHOST);
 			printf("New connection from %s\n", address_buffer);
-			logs("../../logs/server.log", INFO, "New connection from %s", address_buffer);
+			logs(SERVER_LOG_DIR, INFO, "New connection from %s", address_buffer);
 
 			// Send 220 code
 			char *msg;

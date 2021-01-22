@@ -42,39 +42,39 @@ eSystemState fsm_state_handler(struct pollfd *pfds, int *nfds, char *response, e
 		case Begin_State:
 
 			if (eNewEvent == Helo_Event) {
-				logs("../../logs/server.log", INFO, "HELO Command.");
+				logs(SERVER_LOG_DIR, INFO, "HELO Command.");
 				msg = "250 server.server greets client.client\n";
 				send(pfds->fd, msg, strlen(msg), 0);
 
 				eNextState = Wait_State;
 			} else if (eNewEvent == Ehlo_Event) {
-				logs("../../logs/server.log", INFO, "EHLO Command.");
+				logs(SERVER_LOG_DIR, INFO, "EHLO Command.");
 				msg = "250-server.server greets client.client\n250-VRFY\n250 OK\n";
 				send(pfds->fd, msg, strlen(msg), 0);
 
 				eNextState = Wait_State;
 			} else if (eNewEvent == Vrfy_Event) {
-				logs("../../logs/server.log", INFO, "VRFY Command.");
+				logs(SERVER_LOG_DIR, INFO, "VRFY Command.");
 				msg = "503 Error: need HELO/EHLO command\n";
 				send(pfds->fd, msg, strlen(msg), 0);
 			} else if (eNewEvent == Mail_Event) {
-				logs("../../logs/server.log", INFO, "MAIL Command.");
+				logs(SERVER_LOG_DIR, INFO, "MAIL Command.");
 				msg = "503 Error: need HELO/EHLO command\n";
 				send(pfds->fd, msg, strlen(msg), 0);
 			} else if (eNewEvent == Rcpt_Event) {
-				logs("../../logs/server.log", INFO, "RCPT Command.");
+				logs(SERVER_LOG_DIR, INFO, "RCPT Command.");
 				msg = "503 Error: need MAIL command\n";
 				send(pfds->fd, msg, strlen(msg), 0);
 			} else if (eNewEvent == Data_Event) {
-				logs("../../logs/server.log", INFO, "DATA Command.");
+				logs(SERVER_LOG_DIR, INFO, "DATA Command.");
 				msg = "503 Error: need RCPT command\n";
 				send(pfds->fd, msg, strlen(msg), 0);
 			} else if (eNewEvent == Rset_Event) {
-				logs("../../logs/server.log", INFO, "RSET Command.");
+				logs(SERVER_LOG_DIR, INFO, "RSET Command.");
 				msg = "503 Error: need HELO/EHLO command\n";
 				send(pfds->fd, msg, strlen(msg), 0);
 			} else if (eNewEvent == Quit_Event) {
-				logs("../../logs/server.log", INFO, "QUIT Command.");
+				logs(SERVER_LOG_DIR, INFO, "QUIT Command.");
 				msg = "221 BYE\n";
 				send(pfds->fd, msg, strlen(msg), 0);
 
@@ -85,7 +85,7 @@ eSystemState fsm_state_handler(struct pollfd *pfds, int *nfds, char *response, e
 
 				close(pfds->fd);
 			} else if (eNewEvent == Undefined_Event) {
-				logs("../../logs/server.log", INFO, "Command not recognized.");
+				logs(SERVER_LOG_DIR, INFO, "Command not recognized.");
 				msg = "502 Error: command not recognized\n";
 				send(pfds->fd, msg, strlen(msg), 0);
 			}
@@ -95,15 +95,15 @@ eSystemState fsm_state_handler(struct pollfd *pfds, int *nfds, char *response, e
 		case Wait_State:
 
 			if (eNewEvent == Helo_Event) {
-				logs("../../logs/server.log", INFO, "HELO Command.");
+				logs(SERVER_LOG_DIR, INFO, "HELO Command.");
 				msg = "503 Error: need MAIL/VRFY command\n";
 				send(pfds->fd, msg, strlen(msg), 0);
 			} else if (eNewEvent == Ehlo_Event) {
-				logs("../../logs/server.log", INFO, "EHLO Command.");
+				logs(SERVER_LOG_DIR, INFO, "EHLO Command.");
 				msg = "503 Error: need MAIL/VRFY command\n";
 				send(pfds->fd, msg, strlen(msg), 0);
 			} else if (eNewEvent == Vrfy_Event) {
-				logs("../../logs/server.log", INFO, "VRFY Command.");
+				logs(SERVER_LOG_DIR, INFO, "VRFY Command.");
 				char *hostname = get_hostname_from_vrfy(response);
 				char *res = get_address_mail_from_hostname(hostname);
 
@@ -119,7 +119,7 @@ eSystemState fsm_state_handler(struct pollfd *pfds, int *nfds, char *response, e
 					send(pfds->fd, buf, strlen(buf), 0);
 				}
 			} else if (eNewEvent == Mail_Event) {
-				logs("../../logs/server.log", INFO, "MAIL Command.");
+				logs(SERVER_LOG_DIR, INFO, "MAIL Command.");
 				msg = "250 OK\n";
 				send(pfds->fd, msg, strlen(msg), 0);
 
@@ -131,19 +131,19 @@ eSystemState fsm_state_handler(struct pollfd *pfds, int *nfds, char *response, e
 				get_address_from_rcpt_or_mail(response, addr);
 				strcpy(mc->from, addr);
 			} else if (eNewEvent == Rcpt_Event) {
-				logs("../../logs/server.log", INFO, "RCPT Command.");
+				logs(SERVER_LOG_DIR, INFO, "RCPT Command.");
 				msg = "503 Error: need MAIL command\n";
 				send(pfds->fd, msg, strlen(msg), 0);
 			} else if (eNewEvent == Data_Event) {
-				logs("../../logs/server.log", INFO, "DATA Command.");
+				logs(SERVER_LOG_DIR, INFO, "DATA Command.");
 				msg = "503 Error: need RCPT command\n";
 				send(pfds->fd, msg, strlen(msg), 0);
 			} else if (eNewEvent == Rset_Event) {
-				logs("../../logs/server.log", INFO, "RSET Command.");
+				logs(SERVER_LOG_DIR, INFO, "RSET Command.");
 				msg = "250 OK\n";
 				send(pfds->fd, msg, strlen(msg), 0);
 			} else if (eNewEvent == Quit_Event) {
-				logs("../../logs/server.log", INFO, "QUIT Command.");
+				logs(SERVER_LOG_DIR, INFO, "QUIT Command.");
 				msg = "221 BYE\n";
 				send(pfds->fd, msg, strlen(msg), 0);
 
@@ -154,7 +154,7 @@ eSystemState fsm_state_handler(struct pollfd *pfds, int *nfds, char *response, e
 
 				close(pfds->fd);
 			} else if (eNewEvent == Undefined_Event) {
-				logs("../../logs/server.log", INFO, "Command not recognized.");
+				logs(SERVER_LOG_DIR, INFO, "Command not recognized.");
 				msg = "502 Error: command not recognized\n";
 				send(pfds->fd, msg, strlen(msg), 0);
 			}
@@ -164,15 +164,15 @@ eSystemState fsm_state_handler(struct pollfd *pfds, int *nfds, char *response, e
 		case Envelope_Create_State:
 
 			if (eNewEvent == Helo_Event) {
-				logs("../../logs/server.log", INFO, "HELO Command.");
+				logs(SERVER_LOG_DIR, INFO, "HELO Command.");
 				msg = "503 Error: need RCPT/VRFY command\n";
 				send(pfds->fd, msg, strlen(msg), 0);
 			} else if (eNewEvent == Ehlo_Event) {
-				logs("../../logs/server.log", INFO, "EHLO Command.");
+				logs(SERVER_LOG_DIR, INFO, "EHLO Command.");
 				msg = "503 Error: need RCPT/VRFY command\n";
 				send(pfds->fd, msg, strlen(msg), 0);
 			} else if (eNewEvent == Vrfy_Event) {
-				logs("../../logs/server.log", INFO, "VRFY Command.");
+				logs(SERVER_LOG_DIR, INFO, "VRFY Command.");
 				char *hostname = get_hostname_from_vrfy(response);
 				char *res = get_address_mail_from_hostname(hostname);
 
@@ -188,11 +188,11 @@ eSystemState fsm_state_handler(struct pollfd *pfds, int *nfds, char *response, e
 					send(pfds->fd, buf, strlen(buf), 0);
 				}
 			} else if (eNewEvent == Mail_Event) {
-				logs("../../logs/server.log", INFO, "MAIL Command.");
+				logs(SERVER_LOG_DIR, INFO, "MAIL Command.");
 				msg = "503 Error: need RCPT/VRFY command\n";
 				send(pfds->fd, msg, strlen(msg), 0);
 			} else if (eNewEvent == Rcpt_Event) {
-				logs("../../logs/server.log", INFO, "RCPT Command.");
+				logs(SERVER_LOG_DIR, INFO, "RCPT Command.");
 				char addr[SIZE];
 
 				get_address_from_rcpt_or_mail(response, addr);
@@ -210,17 +210,17 @@ eSystemState fsm_state_handler(struct pollfd *pfds, int *nfds, char *response, e
 				// Save "To" to mailContent
 				strcpy(mc->to, addr);
 			} else if (eNewEvent == Data_Event) {
-				logs("../../logs/server.log", INFO, "DATA Command.");
+				logs(SERVER_LOG_DIR, INFO, "DATA Command.");
 				msg = "503 Error: need RCPT command\n";
 				send(pfds->fd, msg, strlen(msg), 0);
 			} else if (eNewEvent == Rset_Event) {
-				logs("../../logs/server.log", INFO, "RSET Command.");
+				logs(SERVER_LOG_DIR, INFO, "RSET Command.");
 				msg = "250 OK\n";
 				send(pfds->fd, msg, strlen(msg), 0);
 
 				eNextState = Wait_State;
 			} else if (eNewEvent == Quit_Event) {
-				logs("../../logs/server.log", INFO, "QUIT Command.");
+				logs(SERVER_LOG_DIR, INFO, "QUIT Command.");
 				msg = "221 BYE\n";
 				send(pfds->fd, msg, strlen(msg), 0);
 
@@ -231,7 +231,7 @@ eSystemState fsm_state_handler(struct pollfd *pfds, int *nfds, char *response, e
 
 				close(pfds->fd);
 			} else if (eNewEvent == Undefined_Event) {
-				logs("../../logs/server.log", INFO, "Command not recognized.");
+				logs(SERVER_LOG_DIR, INFO, "Command not recognized.");
 				msg = "502 Error: command not recognized\n";
 				send(pfds->fd, msg, strlen(msg), 0);
 			}
@@ -241,15 +241,15 @@ eSystemState fsm_state_handler(struct pollfd *pfds, int *nfds, char *response, e
 		case Recipients_Set_State:
 
 			if (eNewEvent == Helo_Event) {
-				logs("../../logs/server.log", INFO, "HELO Command.");
+				logs(SERVER_LOG_DIR, INFO, "HELO Command.");
 				msg = "503 Error: need RCPT/VRFY command\n";
 				send(pfds->fd, msg, strlen(msg), 0);
 			} else if (eNewEvent == Ehlo_Event) {
-				logs("../../logs/server.log", INFO, "EHLO Command.");
+				logs(SERVER_LOG_DIR, INFO, "EHLO Command.");
 				msg = "503 Error: need RCPT/VRFY command\n";
 				send(pfds->fd, msg, strlen(msg), 0);
 			} else if (eNewEvent == Vrfy_Event) {
-				logs("../../logs/server.log", INFO, "VRFY Command.");
+				logs(SERVER_LOG_DIR, INFO, "VRFY Command.");
 				char *hostname = get_hostname_from_vrfy(response);
 				char *res = get_address_mail_from_hostname(hostname);
 
@@ -265,11 +265,11 @@ eSystemState fsm_state_handler(struct pollfd *pfds, int *nfds, char *response, e
 					send(pfds->fd, buf, strlen(buf), 0);
 				}
 			} else if (eNewEvent == Mail_Event) {
-				logs("../../logs/server.log", INFO, "MAIL Command.");
+				logs(SERVER_LOG_DIR, INFO, "MAIL Command.");
 				msg = "503 Error: need RCPT command\n";
 				send(pfds->fd, msg, strlen(msg), 0);
 			} else if (eNewEvent == Rcpt_Event) {
-				logs("../../logs/server.log", INFO, "RCPT Command.");
+				logs(SERVER_LOG_DIR, INFO, "RCPT Command.");
 				char addr[SIZE];
 
 				get_address_from_rcpt_or_mail(response, addr);
@@ -286,19 +286,19 @@ eSystemState fsm_state_handler(struct pollfd *pfds, int *nfds, char *response, e
 					send(pfds->fd, msg, strlen(msg), 0);
 				}
 			} else if (eNewEvent == Data_Event) {
-				logs("../../logs/server.log", INFO, "DATA Command.");
+				logs(SERVER_LOG_DIR, INFO, "DATA Command.");
 				msg = "354 Start mail input; end with <CRLF>.<CRLF>\n";
 				send(pfds->fd, msg, strlen(msg), 0);
 
 				eNextState = Writing_Mail_State;
 			} else if (eNewEvent == Rset_Event) {
-				logs("../../logs/server.log", INFO, "RSET Command.");
+				logs(SERVER_LOG_DIR, INFO, "RSET Command.");
 				msg = "250 OK\n";
 				send(pfds->fd, msg, strlen(msg), 0);
 
 				eNextState = Wait_State;
 			} else if (eNewEvent == Quit_Event) {
-				logs("../../logs/server.log", INFO, "QUIT Command.");
+				logs(SERVER_LOG_DIR, INFO, "QUIT Command.");
 				msg = "221 BYE\n";
 				send(pfds->fd, msg, strlen(msg), 0);
 
@@ -309,7 +309,7 @@ eSystemState fsm_state_handler(struct pollfd *pfds, int *nfds, char *response, e
 
 				close(pfds->fd);
 			} else if (eNewEvent == Undefined_Event) {
-				logs("../../logs/server.log", INFO, "Command not recognized.");
+				logs(SERVER_LOG_DIR, INFO, "Command not recognized.");
 				msg = "502 Error: command not recognized\n";
 				send(pfds->fd, msg, strlen(msg), 0);
 			}
@@ -319,10 +319,10 @@ eSystemState fsm_state_handler(struct pollfd *pfds, int *nfds, char *response, e
 		case Writing_Mail_State:
 
 			if (strcmp(response, ".\n") != 0) {
-				logs("../../logs/server.log", INFO, "Add data.");
+				logs(SERVER_LOG_DIR, INFO, "Add data.");
 				strcat(mc->body, response);
 			} else {
-				logs("../../logs/server.log", INFO, "Complete data.");
+				logs(SERVER_LOG_DIR, INFO, "Complete data.");
 				msg = "250 OK\n";
 				send(pfds->fd, msg, strlen(msg), 0);
 
@@ -336,15 +336,15 @@ eSystemState fsm_state_handler(struct pollfd *pfds, int *nfds, char *response, e
 		case Ready_To_Deliver_State:
 
 			if (eNewEvent == Helo_Event) {
-				logs("../../logs/server.log", INFO, "HELO Command.");
+				logs(SERVER_LOG_DIR, INFO, "HELO Command.");
 				msg = "503 Error: need MAIL/VRFY command\n";
 				send(pfds->fd, msg, strlen(msg), 0);
 			} else if (eNewEvent == Ehlo_Event) {
-				logs("../../logs/server.log", INFO, "EHLO Command.");
+				logs(SERVER_LOG_DIR, INFO, "EHLO Command.");
 				msg = "503 Error: need MAIL/VRFY command\n";
 				send(pfds->fd, msg, strlen(msg), 0);
 			} else if (eNewEvent == Vrfy_Event) {
-				logs("../../logs/server.log", INFO, "VRFY Command.");
+				logs(SERVER_LOG_DIR, INFO, "VRFY Command.");
 				char *hostname = get_hostname_from_vrfy(response);
 				char *res = get_address_mail_from_hostname(hostname);
 
@@ -360,11 +360,15 @@ eSystemState fsm_state_handler(struct pollfd *pfds, int *nfds, char *response, e
 					send(pfds->fd, buf, strlen(buf), 0);
 				}
 			} else if (eNewEvent == Mail_Event) {
-				logs("../../logs/server.log", INFO, "MAIL Command.");
+				logs(SERVER_LOG_DIR, INFO, "MAIL Command.");
 				msg = "250 OK\n";
 				send(pfds->fd, msg, strlen(msg), 0);
 
 				eNextState = Envelope_Create_State;
+
+				// Delete old data in mailContent
+				*num_cc = 0;
+				strcpy(mc->body, "");
 
 				// Save "From" to mailContent
 				char addr[SIZE];
@@ -372,19 +376,19 @@ eSystemState fsm_state_handler(struct pollfd *pfds, int *nfds, char *response, e
 				get_address_from_rcpt_or_mail(response, addr);
 				strcpy(mc->from, addr);
 			} else if (eNewEvent == Rcpt_Event) {
-				logs("../../logs/server.log", INFO, "RCPT Command.");
+				logs(SERVER_LOG_DIR, INFO, "RCPT Command.");
 				msg = "503 Error: need MAIL command\n";
 				send(pfds->fd, msg, strlen(msg), 0);
 			} else if (eNewEvent == Data_Event) {
-				logs("../../logs/server.log", INFO, "DATA Command.");
+				logs(SERVER_LOG_DIR, INFO, "DATA Command.");
 				msg = "503 Error: need RCPT command\n";
 				send(pfds->fd, msg, strlen(msg), 0);
 			} else if (eNewEvent == Rset_Event) {
-				logs("../../logs/server.log", INFO, "RSET Command.");
+				logs(SERVER_LOG_DIR, INFO, "RSET Command.");
 				msg = "503 Error: need MAIL command\n";
 				send(pfds->fd, msg, strlen(msg), 0);
 			} else if (eNewEvent == Quit_Event) {
-				logs("../../logs/server.log", INFO, "QUIT Command.");
+				logs(SERVER_LOG_DIR, INFO, "QUIT Command.");
 				msg = "221 BYE\n";
 				send(pfds->fd, msg, strlen(msg), 0);
 
@@ -395,7 +399,7 @@ eSystemState fsm_state_handler(struct pollfd *pfds, int *nfds, char *response, e
 
 				close(pfds->fd);
 			} else if (eNewEvent == Undefined_Event) {
-				logs("../../logs/server.log", INFO, "Command not recognized.");
+				logs(SERVER_LOG_DIR, INFO, "Command not recognized.");
 				msg = "502 Error: command not recognized\n";
 				send(pfds->fd, msg, strlen(msg), 0);
 			}
